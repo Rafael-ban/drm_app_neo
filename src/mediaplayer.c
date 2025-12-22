@@ -7,12 +7,14 @@
 #include <sys/time.h>
 #include <unistd.h>
 
+#include "drm_warpper.h"
 #include "log.h"
 #include "cdx_config.h"
 #include "CdxParser.h"
 #include "vdecoder.h"
 #include "memoryAdapter.h"
 #include "config.h"
+#include "srgn_drm.h"
 
 /* external cedarx plugin entry */
 extern void AddVDPlugin(void);
@@ -172,6 +174,7 @@ static void *mp_decoder_thread(void *param)
     int end_of_stream = 0;
     long long next_frame_time = 0;
 
+
     next_frame_time = mp_get_now_us() + 1000000 * 1000 / mp->framerate;
 
     log_info("decoder thread start, target fps: %d", mp->framerate);
@@ -202,6 +205,16 @@ static void *mp_decoder_thread(void *param)
         if (state & (MEDIAPLAYER_PARSER_ERROR | MEDIAPLAYER_DECODER_ERROR)) {
             log_error("err state,exiting");
             break;
+        }
+
+        // first try to dequeue free buffer from drm_warpper
+        drm_warpper_queue_item_t* item;
+        while(drm_warpper_try_dequeue_free_item(mp->drm_warpper, DRM_WARPPER_LAYER_VIDEO, &item) == 0){
+            VideoPicture* pic = (VideoPicture*)item->userdata;
+            if(pic){
+                ReturnPicture(decoder, pic);
+            }
+            free(item);
         }
 
         // long long start = mp_get_now_us();
@@ -236,14 +249,30 @@ static void *mp_decoder_thread(void *param)
                     break;
                 }
 
-                int dataLen = picture->nWidth * picture->nHeight * 3 / 2;
-                memcpy(mp->output_buf, picture->pData0,
-                       picture->nWidth * picture->nHeight);
-                memcpy(mp->output_buf + picture->nWidth * picture->nHeight,
-                       picture->pData1,
-                       picture->nWidth * picture->nHeight / 2);
+                // int dataLen = picture->nWidth * picture->nHeight * 3 / 2;
+                // memcpy(mp->output_buf, picture->pData0,
+                //        picture->nWidth * picture->nHeight);
+                // memcpy(mp->output_buf + picture->nWidth * picture->nHeight,
+                //        picture->pData1,
+                //        picture->nWidth * picture->nHeight / 2);
 
-                ReturnPicture(decoder, picture);
+                // ReturnPicture(decoder, picture);
+
+                // 把拿到的picture直接交给drm ioctl挂上去(Zero Copy!)
+                drm_warpper_queue_item_t* item_to_display = malloc(sizeof(drm_warpper_queue_item_t));
+                if(item_to_display == NULL){
+                    log_error("malloc err");
+                    ReturnPicture(decoder, picture);
+                    continue;
+                }
+
+                item_to_display->mount.type = DRM_SRGN_MOUNT_FB_TYPE_YUV;
+                item_to_display->mount.ch0_addr = (uint32_t)picture->pData0;
+                item_to_display->mount.ch1_addr = (uint32_t)picture->pData1;
+                item_to_display->mount.ch2_addr = 0;
+                item_to_display->userdata = (void*)picture;
+
+                drm_warpper_enqueue_display_item(mp->drm_warpper, DRM_WARPPER_LAYER_VIDEO, item_to_display);
 
                 next_frame_time = next_frame_time + 1000000 * 1000 / mp->framerate;
             }
@@ -284,7 +313,7 @@ static void mp_cleanup_internal(mediaplayer_t *mp)
     }
 }
 
-int mediaplayer_init(mediaplayer_t *mp)
+int mediaplayer_init(mediaplayer_t *mp,drm_warpper_t *drm_warpper)
 {
 
     memset(mp, 0, sizeof(*mp));
@@ -296,6 +325,8 @@ int mediaplayer_init(mediaplayer_t *mp)
     mp->thread.requested_stop = 0;
     mp->running = 0;
     memset(mp->video_path, 0, sizeof(mp->video_path));
+
+    mp->drm_warpper = drm_warpper;
 
     AddVDPlugin();
 
@@ -319,9 +350,9 @@ int mediaplayer_destroy(mediaplayer_t *mp)
     return 0;
 }
 
-int mediaplayer_play_video(mediaplayer_t *mp, const char *file, uint8_t *buf)
+int mediaplayer_play_video(mediaplayer_t *mp, const char *file)
 {
-    if (!mp || !file || !buf) {
+    if (!mp || !file) {
         log_error("invalid params");
         return -1;
     }
@@ -333,7 +364,6 @@ int mediaplayer_play_video(mediaplayer_t *mp, const char *file, uint8_t *buf)
 
     memset(mp->input_uri, 0, sizeof(mp->input_uri));
     snprintf(mp->input_uri, sizeof(mp->input_uri), "file://%s", file);
-    mp->output_buf = buf;
 
     mp->memops = MemAdapterGetOpsS();
     if (!mp->memops) {
@@ -508,8 +538,8 @@ int mediaplayer_set_video(mediaplayer_t *mp, const char *path)
 
 int mediaplayer_start(mediaplayer_t *mp)
 {
-    if (!mp || !mp->output_buf) {
-        log_error("invalid params or output buffer not set");
+    if (!mp) {
+        log_error("invalid paramst");
         return -1;
     }
 
@@ -644,14 +674,4 @@ mp_status_t mediaplayer_get_status(mediaplayer_t *mp)
     }
 
     return MP_STATUS_PLAYING;
-}
-
-void mediaplayer_set_output_buffer(mediaplayer_t *mp, uint8_t *buf)
-{
-    if (!mp || !buf) {
-        log_error("invalid params");
-        return;
-    }
-
-    mp->output_buf = buf;
 }

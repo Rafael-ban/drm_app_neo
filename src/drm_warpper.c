@@ -27,6 +27,16 @@ static void drm_warpper_wait_for_vsync(drm_warpper_t *drm_warpper){
     }
 }
 
+// 内核那边会缓存用户地址到物理地址，以便快速挂。
+// 每次启动前都需要reset cache，避免上次启动的残留。
+static void drm_warpper_reset_cache_ioctl(drm_warpper_t *drm_warpper){
+    int ret;
+    ret = drmIoctl(drm_warpper->fd, DRM_IOCTL_SRGN_RESET_CACHE, NULL);
+    if(ret < 0){
+        log_error("drm_warpper_reset_cache_ioctl failed %s(%d)", strerror(errno), errno);
+    }
+}
+
 static void drm_warpper_switch_buffer_ioctl(drm_warpper_t *drm_warpper,int layer_id,int type,uint8_t *ch0_addr,uint8_t *ch1_addr,uint8_t *ch2_addr){
     int ret;
     struct drm_srgn_mount_fb srgn_mount_fb;
@@ -43,69 +53,46 @@ static void drm_warpper_switch_buffer_ioctl(drm_warpper_t *drm_warpper,int layer
     }
 }
 
-static void* drm_warpper_display_thread(void *arg){
+static void drm_warpper_display_thread(void *arg){
     drm_warpper_t *drm_warpper = (drm_warpper_t *)arg;
-    bool need_flip = false;
-    int ret,i;
-
-    log_info("display thread started");
     while(drm_warpper->thread_running){
         drm_warpper_wait_for_vsync(drm_warpper);
-
-        for(int layer_id = 0; layer_id < 4; layer_id++){
-            if(drm_warpper->plane[layer_id].used){
-                buffer_object_t* buf;
-                bool res = try_dequeue(&drm_warpper->plane[layer_id].ready_queue, &buf);
-                if(res){
-                    if(layer_id == DRM_WARPPER_LAYER_UI){
-                        drm_warpper_switch_buffer_ioctl(
-                            drm_warpper, 
-                            layer_id, 
-                            DRM_SRGN_MOUNT_FB_TYPE_NORMAL, 
-                            buf->vaddr, 
-                            NULL, 
-                            NULL
-                        );
+        for(int i = 0; i < 4; i++){
+            layer_t* layer = &drm_warpper->layer[i];
+            if(layer->used){
+                drm_warpper_queue_item_t* item;
+                if(spsc_bq_try_pop(&layer->display_queue, (void**)&item) == 0){
+                    // somthing is wait to be displayed.
+                    // so, switch buffer using ioctl,and put current item to free queue.
+                    drm_warpper_switch_buffer_ioctl(drm_warpper, i, 
+                        item->mount.type, 
+                        (uint8_t*)item->mount.ch0_addr, 
+                        (uint8_t*)item->mount.ch1_addr, 
+                        (uint8_t*)item->mount.ch2_addr
+                    );
+                    if(layer->curr_item){
+                        spsc_bq_push(&layer->free_queue, layer->curr_item);
                     }
-                }
-                for(int i = 0; i < 2; i++){
-                    if(&drm_warpper->plane[layer_id].buf[i] != buf){
-                        drm_warpper->plane[layer_id].buf[i].state = DRM_WARPPER_BUFFER_STATE_FREE;
-                        sem_post(drm_warpper->plane[layer_id].buf[i].related_free_sem);
-                    }
+                    layer->curr_item = item;
                 }
             }
         }
     }
-    return NULL;
 }
 
-int drm_warpper_arquire_draw_buffer(drm_warpper_t *drm_warpper,int layer_id,uint8_t **vaddr){
-    sem_wait(&drm_warpper->plane[layer_id].free_sem);
-    for(int i = 0; i < 2; i++){
-        if(drm_warpper->plane[layer_id].buf[i].state == DRM_WARPPER_BUFFER_STATE_FREE){
-            *vaddr = drm_warpper->plane[layer_id].buf[i].vaddr;
-            drm_warpper->plane[layer_id].buf[i].state = DRM_WARPPER_BUFFER_STATE_DRAWING;
-            return 0;
-        }
-    }
-    log_error("failed to acquire draw buffer, but free semaphore is not 0?");
-    return -1;
+int drm_warpper_enqueue_display_item(drm_warpper_t *drm_warpper,int layer_id,drm_warpper_queue_item_t* item){
+    layer_t* layer = &drm_warpper->layer[layer_id];
+    return spsc_bq_push(&layer->display_queue, item);
 }
 
-int drm_warpper_return_draw_buffer(drm_warpper_t *drm_warpper,int layer_id, uint8_t* vaddr){
-    buffer_object_t *buf;
+int drm_warpper_dequeue_free_item(drm_warpper_t *drm_warpper,int layer_id,drm_warpper_queue_item_t** out_item){
+    layer_t* layer = &drm_warpper->layer[layer_id];
+    return spsc_bq_pop(&layer->free_queue, (void**)out_item);
+}
 
-    for(int i = 0; i < 2; i++){
-        buf = &drm_warpper->plane[layer_id].buf[i];
-        if(buf->vaddr == vaddr){
-            buf->state = DRM_WARPPER_BUFFER_STATE_READY;
-            enqueue(&drm_warpper->plane[layer_id].ready_queue, &buf);
-            return 0;
-        }
-    }
-    log_error("failed to return draw buffer, but vaddr is not found?");
-    return -1;
+int drm_warpper_try_dequeue_free_item(drm_warpper_t *drm_warpper,int layer_id,drm_warpper_queue_item_t** out_item){
+    layer_t* layer = &drm_warpper->layer[layer_id];
+    return spsc_bq_try_pop(&layer->free_queue, (void**)out_item);
 }
 
 int drm_warpper_init(drm_warpper_t *drm_warpper){
@@ -146,6 +133,8 @@ int drm_warpper_init(drm_warpper_t *drm_warpper){
 
     drm_warpper->blank.request.type = DRM_VBLANK_RELATIVE;
     drm_warpper->blank.request.sequence = 1;
+
+    drm_warpper_reset_cache_ioctl(drm_warpper);
 
     drm_warpper->thread_running = true;
     pthread_create(&drm_warpper->display_thread, NULL, drm_warpper_display_thread, drm_warpper);
@@ -259,90 +248,80 @@ static int drm_warpper_create_buffer_object(int fd,buffer_object_t* bo,int width
 
 int drm_warpper_init_layer(drm_warpper_t *drm_warpper,int layer_id,int width,int height,drm_warpper_layer_mode_t mode){
 
-    plane_t* plane = &drm_warpper->plane[layer_id];
+    layer_t* layer = &drm_warpper->layer[layer_id];
+    int ret;
 
-    plane->buf[0].width = width;
-    plane->buf[0].height = height;
-    plane->buf[1].width = width;
-    plane->buf[1].height = height;
-    
-    drm_warpper_create_buffer_object(drm_warpper->fd, &plane->buf[0], width, height, mode);
-    drm_warpper_create_buffer_object(drm_warpper->fd, &plane->buf[1], width, height, mode);
+    ret = spsc_bq_init(&layer->display_queue, 2);
+    if(ret < 0){
+        log_error("failed to initialize display queue");
+        return -1;
+    }
+    ret = spsc_bq_init(&layer->free_queue, 2);
+    if(ret < 0){
+        log_error("failed to initialize free queue");
+        return -1;
+    }
 
-    sem_init(&plane->free_sem, 0, 2);
-    plane->buf[0].related_free_sem = &plane->free_sem;
-    plane->buf[1].related_free_sem = &plane->free_sem;
-    plane->used = true;
+    layer->mode = mode;
+    layer->used = true;
+    layer->width = width;
+    layer->height = height;
 
-    memset(&plane->ready_queue, 0, sizeof(queue_t));
+    layer->curr_item = NULL;
 
     return 0;
 }
 
-
 int drm_warpper_destroy_layer(drm_warpper_t *drm_warpper,int layer_id){
+    layer_t* layer = &drm_warpper->layer[layer_id];
+    spsc_bq_destroy(&layer->display_queue);
+    spsc_bq_destroy(&layer->free_queue);
+    layer->used = false;
+    return 0;
+}
+
+int drm_warpper_allocate_buffer(drm_warpper_t *drm_warpper,int layer_id,buffer_object_t *buf){
+    int ret;
+    layer_t* layer = &drm_warpper->layer[layer_id];
+    buf->width = layer->width;
+    buf->height = layer->height;
+    ret = drm_warpper_create_buffer_object(drm_warpper->fd, buf, layer->width, layer->height, layer->mode);
+    if(ret < 0){
+        log_error("failed to allocate buffer");
+        return -1;
+    }
+}
+
+int drm_warpper_free_buffer(drm_warpper_t *drm_warpper,int layer_id,buffer_object_t *buf){
     struct drm_mode_destroy_dumb destroy;
 
     memset(&destroy, 0, sizeof(struct drm_mode_destroy_dumb));
 
-    drmModeRmFB(drm_warpper->fd, drm_warpper->plane[layer_id].buf[0].fb_id);
-    munmap(drm_warpper->plane[layer_id].buf[0].vaddr, drm_warpper->plane[layer_id].buf[0].size);
+    drmModeRmFB(drm_warpper->fd, buf->fb_id);
+    munmap(buf->vaddr, buf->size);
 
-    destroy.handle = drm_warpper->plane[layer_id].buf[0].handle;
+    destroy.handle = buf->handle;
     drmIoctl(drm_warpper->fd, DRM_IOCTL_MODE_DESTROY_DUMB, &destroy);
-
-    drmModeRmFB(drm_warpper->fd, drm_warpper->plane[layer_id].buf[1].fb_id);
-    munmap(drm_warpper->plane[layer_id].buf[1].vaddr, drm_warpper->plane[layer_id].buf[1].size);
-
-    destroy.handle = drm_warpper->plane[layer_id].buf[1].handle;
-    drmIoctl(drm_warpper->fd, DRM_IOCTL_MODE_DESTROY_DUMB, &destroy);
-
-    sem_destroy(&drm_warpper->plane[layer_id].free_sem);
-    drm_warpper->plane[layer_id].used = false;
 
     return 0;
 }
 
-int drm_warpper_get_layer_buffer(drm_warpper_t *drm_warpper,int layer_id,uint8_t **vaddr){
-    sem_wait(&drm_warpper->plane[layer_id].free_sem);
-    for(int i = 0; i < 2; i++){
-        if(drm_warpper->plane[layer_id].buf[i].state == DRM_WARPPER_BUFFER_STATE_FREE){
-            *vaddr = drm_warpper->plane[layer_id].buf[i].vaddr;
-            drm_warpper->plane[layer_id].buf[i].state = DRM_WARPPER_BUFFER_STATE_DRAWING;
-            return 0;
-        }
-    }
-    log_error("failed to get layer buffer, but free semaphore is not 0?");
-    return -1;
-}
-
-int drm_warpper_return_layer_buffer(drm_warpper_t *drm_warpper,int layer_id,int buf_id){
-    drm_warpper->plane[layer_id].buf[buf_id].state = DRM_WARPPER_BUFFER_STATE_READY;
-    enqueue(&drm_warpper->plane[layer_id].ready_queue, &buf_id);
-    return 0;
-}
 
 
-int drm_warpper_mount_layer(drm_warpper_t *drm_warpper,int layer_id,int x,int y){
+int drm_warpper_mount_layer(drm_warpper_t *drm_warpper,int layer_id,int x,int y,buffer_object_t *buf){
     int ret;
-    sem_wait(&drm_warpper->plane[layer_id].free_sem);
-    drm_warpper->plane[layer_id].buf[0].state = DRM_WARPPER_BUFFER_STATE_DISPLAYING;
     ret = drmModeSetPlane(drm_warpper->fd, 
         drm_warpper->plane_res->planes[layer_id], 
         drm_warpper->crtc_id, 
-        drm_warpper->plane[layer_id].buf[0].fb_id, 
+        buf->fb_id, 
         0,
         x, y, 
-        drm_warpper->plane[layer_id].buf[0].width, drm_warpper->plane[layer_id].buf[0].height, 
+        buf->width, buf->height, 
         0, 0,
-        (drm_warpper->plane[layer_id].buf[0].width) << 16, (drm_warpper->plane[layer_id].buf[0].height) << 16
+        (buf->width) << 16, (buf->height) << 16
     );
     if (ret < 0)
         log_error("drmModeSetPlane err %d", ret);
     return 0;
 }
 
-
-int drm_warpper_get_layer_buffer_legacy(drm_warpper_t *drm_warpper,int layer_id){
-    return drm_warpper->plane[layer_id].buf[0].vaddr;
-}

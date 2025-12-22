@@ -41,7 +41,6 @@ typedef struct {
 
     char                 input_uri[256];
     char                 video_path[256];
-    uint8_t             *output_buf;
     int                  running;
     int                  framerate;
     
@@ -55,13 +54,13 @@ typedef enum {
 } mp_status_t;
 
 /* initialize mediaplayer context */
-int mediaplayer_init(mediaplayer_t *mediaplayer);
+int mediaplayer_init(mediaplayer_t *mediaplayer, drm_warpper_t *drm_warpper);
 
 /* destroy mediaplayer context and release all resources */
 int mediaplayer_destroy(mediaplayer_t *mediaplayer);
 
 /* decode one frame from file into buf (YUV MB32 420, fixed size) */
-int mediaplayer_play_video(mediaplayer_t *mediaplayer, const char *file, uint8_t *buf);
+int mediaplayer_play_video(mediaplayer_t *mediaplayer, const char *file);
 
 /* stop current decoding if running */
 int mediaplayer_stop(mediaplayer_t *mediaplayer);
@@ -72,9 +71,5 @@ int mediaplayer_set_video(mediaplayer_t *mediaplayer, const char *path);
 /* start playback (non-blocking) */
 int mediaplayer_start(mediaplayer_t *mediaplayer);
 
-
 /* get current status: "stopped", "playing", */
 mp_status_t mediaplayer_get_status(mediaplayer_t *mediaplayer);
-
-/* set output buffer */
-void mediaplayer_set_output_buffer(mediaplayer_t *mediaplayer, uint8_t *buf);

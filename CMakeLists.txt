@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 project(epass_drm_app)
+include(FetchContent)
 
 find_package(Git REQUIRED)
 execute_process(
@@ -20,6 +21,18 @@ endif()
 
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(LIBEVDEV REQUIRED libevdev)
+pkg_check_modules(LIBDRM REQUIRED libdrm)
+
+set(LV_CONF_PATH
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/lv_conf.h
+    CACHE STRING "" FORCE)
+
+# Fetch LVGL from GitHub
+FetchContent_Declare(lvgl 
+    GIT_REPOSITORY  https://github.com/lvgl/lvgl.git
+    GIT_TAG         v8.4.0
+)
+FetchContent_MakeAvailable(lvgl)
 
 
 add_executable(epass_drm_app
@@ -28,12 +41,14 @@ add_executable(epass_drm_app
   src/log.c
   src/mediaplayer.c
   src/spsc_queue.c
+  src/lvgl_drm_warp.c
+  src/gui_app.c
 )
 
 target_include_directories(epass_drm_app PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/src
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/RREFont
   ${LIBEVDEV_INCLUDE_DIRS}
+  ${LIBDRM_INCLUDE_DIRS}
 )
 
 target_compile_definitions(epass_drm_app PRIVATE
@@ -49,8 +64,6 @@ target_compile_options(epass_drm_app PRIVATE
    ${LIBEVDEV_CFLAGS_OTHER}
 )
 
-include_directories(/home/shirogane/Desktop/liulianpai/buildroot-tiny200/output/host/arm-buildroot-linux-gnueabi/sysroot/usr/include/drm/)
-
 include_directories(/home/shirogane/Desktop/liulianpai/drm_app/backup/tina_multimedia/libcedarx/libcore/base/include)
 include_directories(/home/shirogane/Desktop/liulianpai/drm_app/backup/tina_multimedia/libcedarx/libcore/parser/include)
 include_directories(/home/shirogane/Desktop/liulianpai/drm_app/backup/tina_multimedia/libcedarx/libcore/stream/include)
@@ -62,7 +75,6 @@ set(CMAKE_LIBRARY_PATH "/home/shirogane/Desktop/liulianpai/cedarx_build/lib")
 
 target_link_libraries(epass_drm_app
   m
-  drm
   MemAdapter
   vdecoder
   VE
@@ -76,6 +88,9 @@ target_link_libraries(epass_drm_app
   cdx_common
 
   ${LIBEVDEV_LIBRARIES}
+  ${LIBDRM_LIBRARIES}
+  lvgl::lvgl
+  lvgl::demos
 )
 
 

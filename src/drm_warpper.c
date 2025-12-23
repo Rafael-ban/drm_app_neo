@@ -64,6 +64,7 @@ static void drm_warpper_display_thread(void *arg){
                 if(spsc_bq_try_pop(&layer->display_queue, (void**)&item) == 0){
                     // somthing is wait to be displayed.
                     // so, switch buffer using ioctl,and put current item to free queue.
+                    // log_info("switch buffer on layer %d type %d", i, item->mount.type);
                     drm_warpper_switch_buffer_ioctl(drm_warpper, i, 
                         item->mount.type, 
                         (uint8_t*)item->mount.ch0_addr, 
@@ -72,6 +73,7 @@ static void drm_warpper_display_thread(void *arg){
                     );
                     if(layer->curr_item){
                         spsc_bq_push(&layer->free_queue, layer->curr_item);
+
                     }
                     layer->curr_item = item;
                 }

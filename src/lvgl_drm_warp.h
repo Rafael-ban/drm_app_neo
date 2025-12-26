@@ -7,13 +7,7 @@
 typedef struct {
     drm_warpper_t *drm_warpper;
 
-    lv_disp_drv_t disp_drv;
-    lv_disp_draw_buf_t draw_buf;
-
-    lv_disp_t * disp;
-
-    lv_area_t inv_areas[LV_INV_BUF_SIZE];
-    uint32_t inv_cnt;
+    lv_display_t * disp;
 
     int curr_draw_buf_idx;
 
@@ -21,6 +15,9 @@ typedef struct {
     buffer_object_t ui_buf_2;
     drm_warpper_queue_item_t ui_buf_1_item;
     drm_warpper_queue_item_t ui_buf_2_item;
+
+    bool has_vsync_done;
+    lv_indev_t *keypad_indev;
 
 } lvgl_drm_warp_t;
 

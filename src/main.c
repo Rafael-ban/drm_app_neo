@@ -79,7 +79,6 @@ int main(int argc, char *argv[]){
     // ============ 主循环 ===============
     while(g_running){
         lvgl_drm_warp_tick(&g_lvgl_drm_warp);
-        usleep(10*1000);
     }
 
     /* cleanup */

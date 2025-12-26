@@ -23,17 +23,8 @@ find_package(PkgConfig REQUIRED)
 pkg_check_modules(LIBEVDEV REQUIRED libevdev)
 pkg_check_modules(LIBDRM REQUIRED libdrm)
 
-set(LV_CONF_PATH
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/lv_conf.h
-    CACHE STRING "" FORCE)
-
-# Fetch LVGL from GitHub
-FetchContent_Declare(lvgl 
-    GIT_REPOSITORY  https://github.com/lvgl/lvgl.git
-    GIT_TAG         v8.4.0
-)
-FetchContent_MakeAvailable(lvgl)
-
+set(LV_BUILD_CONF_DIR src/)
+add_subdirectory(lvgl)
 
 add_executable(epass_drm_app
   src/main.c
@@ -49,6 +40,7 @@ target_include_directories(epass_drm_app PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/src
   ${LIBEVDEV_INCLUDE_DIRS}
   ${LIBDRM_INCLUDE_DIRS}
+  ${CMAKE_CURRENT_SOURCE_DIR}/lvgl
 )
 
 target_compile_definitions(epass_drm_app PRIVATE
@@ -89,8 +81,8 @@ target_link_libraries(epass_drm_app
 
   ${LIBEVDEV_LIBRARIES}
   ${LIBDRM_LIBRARIES}
-  lvgl::lvgl
-  lvgl::demos
+
+  lvgl
 )
 
 

@@ -22,9 +22,11 @@ static inline int DRM_IOCTL(int fd, unsigned long cmd, void *arg) {
 static void drm_warpper_wait_for_vsync(drm_warpper_t *drm_warpper){
     drm_warpper->blank.request.type = DRM_VBLANK_RELATIVE;
     drm_warpper->blank.request.sequence = 1;
+    // log_info("wait for vsync");
     if (drmWaitVBlank(drm_warpper->fd, (drmVBlankPtr) &drm_warpper->blank)) {
       log_error("drmWaitVBlank failed");
     }
+    // log_info("vsync done");
 }
 
 // 内核那边会缓存用户地址到物理地址，以便快速挂。
@@ -57,6 +59,7 @@ static void drm_warpper_display_thread(void *arg){
     drm_warpper_t *drm_warpper = (drm_warpper_t *)arg;
     while(drm_warpper->thread_running){
         drm_warpper_wait_for_vsync(drm_warpper);
+        // log_info("vsync");
         for(int i = 0; i < 4; i++){
             layer_t* layer = &drm_warpper->layer[i];
             if(layer->used){

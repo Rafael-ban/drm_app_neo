@@ -5,6 +5,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <xf86drm.h>
 #include <xf86drmMode.h>
@@ -39,27 +40,35 @@ static void drm_warpper_reset_cache_ioctl(drm_warpper_t *drm_warpper){
     }
 }
 
-static void drm_warpper_switch_buffer_ioctl(drm_warpper_t *drm_warpper,int layer_id,int type,uint8_t *ch0_addr,uint8_t *ch1_addr,uint8_t *ch2_addr){
-    int ret;
-    struct drm_srgn_mount_fb srgn_mount_fb;
+// static void drm_warpper_switch_buffer_ioctl(drm_warpper_t *drm_warpper,int layer_id,int type,uint8_t *ch0_addr,uint8_t *ch1_addr,uint8_t *ch2_addr){
+//     int ret;
+//     struct drm_srgn_mount_fb srgn_mount_fb;
 
-    srgn_mount_fb.layer_id = layer_id;
-    srgn_mount_fb.type = type;
-    srgn_mount_fb.ch0_addr = (uint32_t)ch0_addr;
-    srgn_mount_fb.ch1_addr = (uint32_t)ch1_addr;
-    srgn_mount_fb.ch2_addr = (uint32_t)ch2_addr;
+//     srgn_mount_fb.layer_id = layer_id;
+//     srgn_mount_fb.type = type;
+//     srgn_mount_fb.ch0_addr = (uint32_t)ch0_addr;
+//     srgn_mount_fb.ch1_addr = (uint32_t)ch1_addr;
+//     srgn_mount_fb.ch2_addr = (uint32_t)ch2_addr;
     
-    ret = drmIoctl(drm_warpper->fd, DRM_IOCTL_SRGN_MOUNT_FB, &srgn_mount_fb);
-    if(ret < 0){
-        log_error("drm_warpper_switch_buffer_ioctl failed %s(%d)", strerror(errno), errno);
-    }
-}
+//     ret = drmIoctl(drm_warpper->fd, DRM_IOCTL_SRGN_MOUNT_FB, &srgn_mount_fb);
+//     if(ret < 0){
+//         log_error("drm_warpper_switch_buffer_ioctl failed %s(%d)", strerror(errno), errno);
+//     }
+// }
 
 static void drm_warpper_display_thread(void *arg){
     drm_warpper_t *drm_warpper = (drm_warpper_t *)arg;
+    struct drm_srgn_mount_fb_data srgn_mount_fb_data[4] = {0};
+    struct drm_srgn_mount_fb srgn_mount_fb = {
+        .size = 0,
+        .data = (uint32_t)srgn_mount_fb_data,
+    };
+    int ret;
+
     while(drm_warpper->thread_running){
         drm_warpper_wait_for_vsync(drm_warpper);
         // log_info("vsync");
+        srgn_mount_fb.size = 0;
         for(int i = 0; i < 4; i++){
             layer_t* layer = &drm_warpper->layer[i];
             if(layer->used){
@@ -68,18 +77,24 @@ static void drm_warpper_display_thread(void *arg){
                     // somthing is wait to be displayed.
                     // so, switch buffer using ioctl,and put current item to free queue.
                     // log_info("switch buffer on layer %d type %d", i, item->mount.type);
-                    drm_warpper_switch_buffer_ioctl(drm_warpper, i, 
-                        item->mount.type, 
-                        (uint8_t*)item->mount.ch0_addr, 
-                        (uint8_t*)item->mount.ch1_addr, 
-                        (uint8_t*)item->mount.ch2_addr
-                    );
+                    srgn_mount_fb_data[srgn_mount_fb.size].layer_id = i;
+                    srgn_mount_fb_data[srgn_mount_fb.size].type = item->mount.type;
+                    srgn_mount_fb_data[srgn_mount_fb.size].ch0_addr = (uint32_t)item->mount.ch0_addr;
+                    srgn_mount_fb_data[srgn_mount_fb.size].ch1_addr = (uint32_t)item->mount.ch1_addr;
+                    srgn_mount_fb_data[srgn_mount_fb.size].ch2_addr = (uint32_t)item->mount.ch2_addr;
+                    srgn_mount_fb.size++;
                     if(layer->curr_item){
                         spsc_bq_push(&layer->free_queue, layer->curr_item);
-
                     }
                     layer->curr_item = item;
                 }
+
+            }
+        }
+        if(srgn_mount_fb.size > 0){
+            ret = drmIoctl(drm_warpper->fd, DRM_IOCTL_SRGN_MOUNT_FB, &srgn_mount_fb);
+            if(ret < 0){
+                log_error("DRM_IOCTL_SRGN_MOUNT_FB failed %s(%d)", strerror(errno), errno);
             }
         }
     }

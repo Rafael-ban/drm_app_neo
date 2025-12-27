@@ -16,12 +16,17 @@
 #define DRM_IOCTL_SRGN_MOUNT_FB DRM_IOW(DRM_COMMAND_BASE + DRM_SRGN_MOUNT_FB, struct drm_srgn_mount_fb)
 #define DRM_IOCTL_SRGN_RESET_CACHE DRM_IO(DRM_COMMAND_BASE + DRM_SRGN_RESET_CACHE)
 
-struct drm_srgn_mount_fb {
+struct drm_srgn_mount_fb_data {
 	uint32_t layer_id;
     uint32_t type;
     uint32_t ch0_addr;
     uint32_t ch1_addr;
     uint32_t ch2_addr;
+};
+
+struct drm_srgn_mount_fb {
+    __u32 size;
+    __u32 data; // pointer to struct drm_srgn_mount_fb_data
 };
 
 #endif

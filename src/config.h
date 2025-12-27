@@ -1,13 +1,30 @@
 #pragma once
 
-#define VIDEO_WIDTH 384
-#define VIDEO_HEIGHT 640
+#define USE_360_640_SCREEN
+// #define USE_480_854_SCREEN
+// #define USE_720_1280_SCREEN
+
+// resolution alternatives.
+#if defined(USE_360_640_SCREEN)
+    #define VIDEO_WIDTH 384
+    #define VIDEO_HEIGHT 640
+    #define UI_WIDTH 360
+    #define UI_HEIGHT 640
+    
+    // UI-信息Overlay叠层 左上角的矩形偏移量
+    #define UI_OVERLAY_ARKNIGHTS_RECT_OFFSET_X 60
+
+    // UI-信息Overlay叠层 左下角“- Arknights -”矩形文字 偏移量
+    #define UI_OVERLAY_ARKNIGHTS_AK_BAR_OFFSET_X 120
+    #define UI_OVERLAY_ARKNIGHTS_AK_BAR_OFFSET_Y 120
+#elif defined(USE_480_854_SCREEN)
+    #error "USE_480_854_SCREEN is not supported yet!"
+#elif defined(USE_720_1280_SCREEN)
+    #error "USE_720_1280_SCREEN is not supported yet!"
+#endif // USE_360_640_SCREEN, USE_480_854_SCREEN, USE_720_1280_SCREEN
 
 #define DRM_WARPPER_LAYER_UI 1
 #define DRM_WARPPER_LAYER_VIDEO 0
-
-#define UI_WIDTH 360
-#define UI_HEIGHT 640
 
 #define SETTINGS_FILE_PATH "/root/epass_cfg.bin"
 #define SETTINGS_MAGIC 0x45504153434F4E46
@@ -18,3 +35,6 @@
 #define BUF_CNT_4_LIST 1
 #define BUF_CNT_4_ROTATE 0
 #define BUF_CNT_4_SMOOTH 1  
+
+
+#define UI_OVERLAY_ARKNIGHTS_PREFIX "A:/root/res/"

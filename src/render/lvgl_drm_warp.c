@@ -18,14 +18,14 @@ static void lvgl_drm_warp_flush_cb(lv_display_t * disp, const lv_area_t * area, 
 {
 
     if(!lv_disp_flush_is_last(disp)){
-        // lv_display_flush_ready(disp);
+        lv_display_flush_ready(disp);
         return;
     }
     lvgl_drm_warp_t *lvgl_drm_warp = (lvgl_drm_warp_t *)lv_display_get_driver_data(disp);
 
-    // drm_warpper_queue_item_t* item;
-    // drm_warpper_dequeue_free_item(lvgl_drm_warp->drm_warpper, DRM_WARPPER_LAYER_UI, &item);
+    
 
+    // log_info("enqueue display item");
 
     if(lvgl_drm_warp->curr_draw_buf_idx == 0){
         drm_warpper_enqueue_display_item(lvgl_drm_warp->drm_warpper, DRM_WARPPER_LAYER_UI, &lvgl_drm_warp->ui_buf_1_item);
@@ -34,30 +34,35 @@ static void lvgl_drm_warp_flush_cb(lv_display_t * disp, const lv_area_t * area, 
     }
     lvgl_drm_warp->curr_draw_buf_idx = !lvgl_drm_warp->curr_draw_buf_idx;
 
-    lvgl_drm_warp->has_vsync_done = false;
+    // lvgl_drm_warp->has_vsync_done = false;
 
+    // wait for vsync done
+    drm_warpper_queue_item_t* item;
+    // log_info("waiting for vsync");
+    drm_warpper_dequeue_free_item(lvgl_drm_warp->drm_warpper, DRM_WARPPER_LAYER_UI, &item);
+    // log_info("dequeued free item");
     // log_debug("flush_cb called, has_vsync_done: %d -> false", lvgl_drm_warp->has_vsync_done);
-    // lv_display_flush_ready(disp);
+    lv_display_flush_ready(disp);
 }
 
 // 这个回调函数呢，他什么时候都可能来调用一下，**就算现在没有正在刷新的内容 他也会来调用一下....**
 // 所以达到vsync以后，之后就不能dequeue(也就是等待了)
-static void lvgl_drm_warp_flush_wait_cb(lv_display_t * disp){
-    drm_warpper_queue_item_t* item;
-    lvgl_drm_warp_t *lvgl_drm_warp = (lvgl_drm_warp_t *)lv_display_get_driver_data(disp);
-    // log_debug("flush_wait_cb called, has_vsync_done: %d", lvgl_drm_warp->has_vsync_done);
+// static void lvgl_drm_warp_flush_wait_cb(lv_display_t * disp){
+//     drm_warpper_queue_item_t* item;
+//     lvgl_drm_warp_t *lvgl_drm_warp = (lvgl_drm_warp_t *)lv_display_get_driver_data(disp);
+//     // log_debug("flush_wait_cb called, has_vsync_done: %d", lvgl_drm_warp->has_vsync_done);
 
-    if(lvgl_drm_warp->has_vsync_done){
-        return;
-    }
+//     if(lvgl_drm_warp->has_vsync_done){
+//         return;
+//     }
 
-    // dequeue only, act as "waiting for vsync"
-    // log_debug("waiting for vsync");
-    drm_warpper_dequeue_free_item(lvgl_drm_warp->drm_warpper, DRM_WARPPER_LAYER_UI, &item);
-    // log_debug("dequeued free item");
+//     // dequeue only, act as "waiting for vsync"
+//     // log_debug("waiting for vsync");
+//     drm_warpper_dequeue_free_item(lvgl_drm_warp->drm_warpper, DRM_WARPPER_LAYER_UI, &item);
+//     // log_debug("dequeued free item");
 
-    lvgl_drm_warp->has_vsync_done = true;
-}
+//     lvgl_drm_warp->has_vsync_done = true;
+// }
 
 
 void lvgl_drm_warp_init(lvgl_drm_warp_t *lvgl_drm_warp,drm_warpper_t *drm_warpper){
@@ -85,7 +90,7 @@ void lvgl_drm_warp_init(lvgl_drm_warp_t *lvgl_drm_warp,drm_warpper_t *drm_warppe
     lvgl_drm_warp->has_vsync_done = true;
 
     // 先把buffer提交进去，形成队列的初始状态（有一个buffer等待被free回来）
-    drm_warpper_enqueue_display_item(drm_warpper, DRM_WARPPER_LAYER_UI, &lvgl_drm_warp->ui_buf_1_item);
+    // drm_warpper_enqueue_display_item(drm_warpper, DRM_WARPPER_LAYER_UI, &lvgl_drm_warp->ui_buf_1_item);
     drm_warpper_enqueue_display_item(drm_warpper, DRM_WARPPER_LAYER_UI, &lvgl_drm_warp->ui_buf_2_item);
     
 
@@ -104,7 +109,7 @@ void lvgl_drm_warp_init(lvgl_drm_warp_t *lvgl_drm_warp,drm_warpper_t *drm_warppe
     lvgl_drm_warp->disp = disp;
     lv_display_set_driver_data(disp, lvgl_drm_warp);
     lv_display_set_flush_cb(disp, lvgl_drm_warp_flush_cb);
-    lv_display_set_flush_wait_cb(disp, lvgl_drm_warp_flush_wait_cb);
+    // lv_display_set_flush_wait_cb(disp, lvgl_drm_warp_flush_wait_cb);
 
     lv_display_set_color_format(disp, LV_COLOR_FORMAT_ARGB8888);
 

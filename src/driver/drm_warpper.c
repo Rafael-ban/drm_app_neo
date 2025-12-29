@@ -14,6 +14,7 @@
 #include "log.h"
 #include "srgn_drm.h"
 #include "config.h"
+#include "spsc_queue.h"
 
 static inline int DRM_IOCTL(int fd, unsigned long cmd, void *arg) {
   int ret = drmIoctl(fd, cmd, arg);
@@ -56,14 +57,16 @@ static void drm_warpper_reset_cache_ioctl(drm_warpper_t *drm_warpper){
 //     }
 // }
 
-static void drm_warpper_display_thread(void *arg){
+static void* drm_warpper_display_thread(void *arg){
     drm_warpper_t *drm_warpper = (drm_warpper_t *)arg;
-    struct drm_srgn_atomic_commit_data commits[4] = {0};
+    struct drm_srgn_atomic_commit_data commits[12] = {0};
     struct drm_srgn_atomic_commit commit_req = {
         .size = 0,
         .data = (uint32_t)(uintptr_t)commits,
     };
     int ret;
+
+    log_info("==========> DRM_Warpper Display Thread Started!");
 
     while(drm_warpper->thread_running){
         drm_warpper_wait_for_vsync(drm_warpper);
@@ -73,7 +76,7 @@ static void drm_warpper_display_thread(void *arg){
             layer_t* layer = &drm_warpper->layer[i];
             if(layer->used){
                 drm_warpper_queue_item_t* item;
-                if(spsc_bq_try_pop(&layer->display_queue, (void**)&item) == 0){
+                while(spsc_bq_try_pop(&layer->display_queue, (void**)&item) == 0){
                     // somthing is wait to be displayed.
                     // so, switch buffer using ioctl,and put current item to free queue.
                     // log_info("switch buffer on layer %d type %d", i, item->mount.type);
@@ -83,10 +86,18 @@ static void drm_warpper_display_thread(void *arg){
                     commits[commit_req.size].arg1 = item->mount.arg1;
                     commits[commit_req.size].arg2 = item->mount.arg2;
                     commit_req.size++;
-                    if(layer->curr_item){
-                        spsc_bq_push(&layer->free_queue, layer->curr_item);
+                    if(item->mount.type == DRM_SRGN_ATOMIC_COMMIT_MOUNT_FB_NORMAL 
+                        || item->mount.type == DRM_SRGN_ATOMIC_COMMIT_MOUNT_FB_YUV){
+                        if(layer->curr_item){
+                            spsc_bq_push(&layer->free_queue, layer->curr_item);
+                        }
+                        layer->curr_item = item;
                     }
-                    layer->curr_item = item;
+                    else{
+                        if(item->on_heap){
+                            free(item);
+                        }
+                    }
                 }
 
             }
@@ -98,6 +109,9 @@ static void drm_warpper_display_thread(void *arg){
             }
         }
     }
+
+    log_info("==========> DRM_Warpper Display Thread Ended!");
+    return NULL;
 }
 
 int drm_warpper_enqueue_display_item(drm_warpper_t *drm_warpper,int layer_id,drm_warpper_queue_item_t* item){
@@ -113,6 +127,38 @@ int drm_warpper_dequeue_free_item(drm_warpper_t *drm_warpper,int layer_id,drm_wa
 int drm_warpper_try_dequeue_free_item(drm_warpper_t *drm_warpper,int layer_id,drm_warpper_queue_item_t** out_item){
     layer_t* layer = &drm_warpper->layer[layer_id];
     return spsc_bq_try_pop(&layer->free_queue, (void**)out_item);
+}
+
+int drm_warpper_set_layer_coord(drm_warpper_t *drm_warpper,int layer_id,int x,int y){
+    drm_warpper_queue_item_t *item = malloc(sizeof(drm_warpper_queue_item_t));
+    if(item == NULL){
+        log_error("failed to allocate memory");
+        return -1;
+    }
+    item->mount.layer_id = layer_id;
+    item->mount.type = DRM_SRGN_ATOMIC_COMMIT_MOUNT_SET_COORD;
+    item->mount.arg0 = (int16_t)y << 16 | (int16_t)x;
+    item->mount.arg1 = 0;
+    item->mount.arg2 = 0;
+    item->userdata = NULL;
+    item->on_heap = true;
+    return drm_warpper_enqueue_display_item(drm_warpper, layer_id, item);
+}
+
+int drm_warpper_set_layer_alpha(drm_warpper_t *drm_warpper,int layer_id,int alpha){
+    drm_warpper_queue_item_t *item = malloc(sizeof(drm_warpper_queue_item_t));
+    if(item == NULL){
+        log_error("failed to allocate memory");
+        return -1;
+    }
+    item->mount.layer_id = layer_id;
+    item->mount.type = DRM_SRGN_ATOMIC_COMMIT_MOUNT_SET_ALPHA;
+    item->mount.arg0 = alpha;
+    item->mount.arg1 = 0;
+    item->mount.arg2 = 0;
+    item->userdata = NULL;
+    item->on_heap = true;
+    return drm_warpper_enqueue_display_item(drm_warpper, layer_id, item);
 }
 
 int drm_warpper_init(drm_warpper_t *drm_warpper){
@@ -168,6 +214,10 @@ int drm_warpper_destroy(drm_warpper_t *drm_warpper){
     close(drm_warpper->fd);
     drm_warpper->thread_running = false;
     pthread_join(drm_warpper->display_thread, NULL);
+
+    for(int i = 0; i < 4; i++){
+        drm_warpper_destroy_layer(drm_warpper, i);
+    }
     return 0;
 }
 
@@ -271,7 +321,7 @@ int drm_warpper_init_layer(drm_warpper_t *drm_warpper,int layer_id,int width,int
     layer_t* layer = &drm_warpper->layer[layer_id];
     int ret;
 
-    ret = spsc_bq_init(&layer->display_queue, 2);
+    ret = spsc_bq_init(&layer->display_queue, 16);
     if(ret < 0){
         log_error("failed to initialize display queue");
         return -1;
@@ -294,6 +344,9 @@ int drm_warpper_init_layer(drm_warpper_t *drm_warpper,int layer_id,int width,int
 
 int drm_warpper_destroy_layer(drm_warpper_t *drm_warpper,int layer_id){
     layer_t* layer = &drm_warpper->layer[layer_id];
+    if(!layer->used){
+        return 0;
+    }
     spsc_bq_destroy(&layer->display_queue);
     spsc_bq_destroy(&layer->free_queue);
     layer->used = false;
@@ -310,6 +363,7 @@ int drm_warpper_allocate_buffer(drm_warpper_t *drm_warpper,int layer_id,buffer_o
         log_error("failed to allocate buffer");
         return -1;
     }
+    return 0;
 }
 
 int drm_warpper_free_buffer(drm_warpper_t *drm_warpper,int layer_id,buffer_object_t *buf){
@@ -344,4 +398,3 @@ int drm_warpper_mount_layer(drm_warpper_t *drm_warpper,int layer_id,int x,int y,
         log_error("drmModeSetPlane err %d", ret);
     return 0;
 }
-

@@ -2,7 +2,6 @@
 #include "lvgl.h"
 #include "log.h"
 #include "lvgl_drm_warp.h"
-#include "overlays.h"
 #include "demos/benchmark/lv_demo_benchmark.h"
 
 // static void gui_app_button_event_handler(lv_event_t * e){
@@ -17,9 +16,6 @@ void gui_app_create_ui(lvgl_drm_warp_t *lvgl_drm_warp){
     log_info("into demo ui");
 
     lv_demo_benchmark();
-
-    lv_obj_set_style_bg_opa(lv_screen_active(), LV_OPA_TRANSP, LV_PART_MAIN);
-    lv_obj_set_style_bg_opa(lv_layer_bottom(), LV_OPA_TRANSP, LV_PART_MAIN);
 
     // lv_obj_t * label;
 
@@ -41,12 +37,5 @@ void gui_app_create_ui(lvgl_drm_warp_t *lvgl_drm_warp){
     // label = lv_label_create(btn2);
     // lv_label_set_text(label, "Toggle");
     // lv_obj_center(label);
-
-
-    // lv_obj_set_style_bg_opa(lv_screen_active(), LV_OPA_TRANSP, LV_PART_MAIN);
-    // lv_obj_set_style_bg_opa(lv_layer_bottom(), LV_OPA_TRANSP, LV_PART_MAIN);
-
-    // lv_obj_t * overlay_screen = ui_create_overlay_arknights();
-    // lv_screen_load_anim(overlay_screen, LV_SCREEN_LOAD_ANIM_FADE_OUT, 2000, 0, true);
 
 }

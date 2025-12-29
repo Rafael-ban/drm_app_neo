@@ -55,6 +55,7 @@ add_executable(epass_drm_app
   src/main.c
 
   src/prts/prts.c
+  src/prts/timer.c
 
   src/driver/drm_warpper.c
 
@@ -62,7 +63,9 @@ add_executable(epass_drm_app
   src/render/lvgl_drm_warp.c
 
   src/ui/gui_app.c
-  src/ui/overlays.c
+
+  src/overlay/overlay.c
+
 
   src/utils/spsc_queue.c
   src/utils/log.c
@@ -76,6 +79,7 @@ target_include_directories(epass_drm_app PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/src/render
   ${CMAKE_CURRENT_SOURCE_DIR}/src/ui
   ${CMAKE_CURRENT_SOURCE_DIR}/src/utils
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/overlay
   ${LIBEVDEV_INCLUDE_DIRS}
   ${LIBDRM_INCLUDE_DIRS}
 )
@@ -90,6 +94,7 @@ target_compile_definitions(epass_drm_app PRIVATE
 
 target_compile_options(epass_drm_app PRIVATE
   -Wall -Wextra -Wno-unused-parameter
+  -ffile-prefix-map=${CMAKE_SOURCE_DIR}/src/=/
    ${LIBEVDEV_CFLAGS_OTHER}
 )
 
@@ -116,6 +121,7 @@ target_link_libraries(epass_drm_app
   cdx_stream
   cdx_base
   cdx_common
+  rt
 
   ${LIBEVDEV_LIBRARIES}
   ${LIBDRM_LIBRARIES}

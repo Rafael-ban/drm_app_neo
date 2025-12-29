@@ -64,6 +64,16 @@ static void lvgl_drm_warp_flush_cb(lv_display_t * disp, const lv_area_t * area, 
 //     lvgl_drm_warp->has_vsync_done = true;
 // }
 
+static void* lvgl_drm_warp_thread_entry(void *arg){
+    lvgl_drm_warp_t *lvgl_drm_warp = (lvgl_drm_warp_t *)arg;
+    log_info("======> LVGL Thread Started!");
+    while(lvgl_drm_warp->running){
+        uint32_t idle_time = lv_timer_handler();
+        usleep(idle_time * 1000);
+    }
+    log_info("======> LVGL Thread Ended!");
+    return NULL; 
+}
 
 void lvgl_drm_warp_init(lvgl_drm_warp_t *lvgl_drm_warp,drm_warpper_t *drm_warpper){
 
@@ -80,13 +90,15 @@ void lvgl_drm_warp_init(lvgl_drm_warp_t *lvgl_drm_warp,drm_warpper_t *drm_warppe
     lvgl_drm_warp->ui_buf_1_item.mount.arg1 = 0;
     lvgl_drm_warp->ui_buf_1_item.mount.arg2 = 0;
     lvgl_drm_warp->ui_buf_1_item.userdata = (void*)&lvgl_drm_warp->ui_buf_1;
+    lvgl_drm_warp->ui_buf_1_item.on_heap = false;
 
     lvgl_drm_warp->ui_buf_2_item.mount.type = DRM_SRGN_ATOMIC_COMMIT_MOUNT_FB_NORMAL;
     lvgl_drm_warp->ui_buf_2_item.mount.arg0 = (uint32_t)lvgl_drm_warp->ui_buf_2.vaddr;
     lvgl_drm_warp->ui_buf_2_item.mount.arg1 = 0;
     lvgl_drm_warp->ui_buf_2_item.mount.arg2 = 0;
     lvgl_drm_warp->ui_buf_2_item.userdata = (void*)&lvgl_drm_warp->ui_buf_2;
-
+    lvgl_drm_warp->ui_buf_2_item.on_heap = false;
+    
     lvgl_drm_warp->has_vsync_done = true;
 
     // 先把buffer提交进去，形成队列的初始状态（有一个buffer等待被free回来）
@@ -103,15 +115,14 @@ void lvgl_drm_warp_init(lvgl_drm_warp_t *lvgl_drm_warp,drm_warpper_t *drm_warppe
     lv_display_set_buffers(disp, 
         lvgl_drm_warp->ui_buf_1.vaddr,
         lvgl_drm_warp->ui_buf_2.vaddr, 
-        UI_WIDTH * UI_HEIGHT * 4,
+        UI_WIDTH * UI_HEIGHT * 2,
         LV_DISPLAY_RENDER_MODE_DIRECT);
     
     lvgl_drm_warp->disp = disp;
     lv_display_set_driver_data(disp, lvgl_drm_warp);
     lv_display_set_flush_cb(disp, lvgl_drm_warp_flush_cb);
     // lv_display_set_flush_wait_cb(disp, lvgl_drm_warp_flush_wait_cb);
-
-    lv_display_set_color_format(disp, LV_COLOR_FORMAT_ARGB8888);
+    lv_display_set_color_format(disp, LV_COLOR_FORMAT_RGB565);
 
     lvgl_drm_warp->keypad_indev = lv_evdev_create(LV_INDEV_TYPE_KEYPAD, "/dev/input/event0");
 
@@ -121,14 +132,14 @@ void lvgl_drm_warp_init(lvgl_drm_warp_t *lvgl_drm_warp,drm_warpper_t *drm_warppe
 
     gui_app_create_ui(lvgl_drm_warp);
 
+    lvgl_drm_warp->running = 1;
+    pthread_create(&lvgl_drm_warp->lvgl_thread, NULL, lvgl_drm_warp_thread_entry, lvgl_drm_warp);
 }
 
 void lvgl_drm_warp_destroy(lvgl_drm_warp_t *lvgl_drm_warp){
     drm_warpper_free_buffer(lvgl_drm_warp->drm_warpper, DRM_WARPPER_LAYER_UI, &lvgl_drm_warp->ui_buf_1);
     drm_warpper_free_buffer(lvgl_drm_warp->drm_warpper, DRM_WARPPER_LAYER_UI, &lvgl_drm_warp->ui_buf_2);
-}
 
-void lvgl_drm_warp_tick(lvgl_drm_warp_t *lvgl_drm_warp){
-    uint32_t idle_time = lv_timer_handler();
-    usleep(idle_time * 1000);
+    lvgl_drm_warp->running = 0;
+    pthread_join(lvgl_drm_warp->lvgl_thread, NULL);
 }

@@ -19,6 +19,9 @@ typedef struct {
     bool has_vsync_done;
     lv_indev_t *keypad_indev;
 
+    pthread_t lvgl_thread;
+    int running;
+
 } lvgl_drm_warp_t;
 
 void lvgl_drm_warp_init(lvgl_drm_warp_t *lvgl_drm_warp,drm_warpper_t *drm_warpper);

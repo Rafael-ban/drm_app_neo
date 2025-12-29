@@ -52,7 +52,7 @@ static void *mp_parser_thread(void *param)
     memset(&packet, 0, sizeof(packet));
     memset(&dataInfo, 0, sizeof(dataInfo));
 
-    log_info("parser thread start");
+    log_info("==========> MediaPlayer-Parser Thread Started!");
 
     startagain:
     while (0 == CdxParserPrefetch(parser, &packet)) {
@@ -66,7 +66,7 @@ static void *mp_parser_thread(void *param)
         if (requested_stop || (state & (MEDIAPLAYER_PARSER_ERROR |
                                         MEDIAPLAYER_DECODER_ERROR |
                                         MEDIAPLAYER_DECODE_FINISH))) {
-            log_info("parser:get exit flag");
+            // log_info("parser:get exit flag");
             break;
         }
 
@@ -92,7 +92,7 @@ static void *mp_parser_thread(void *param)
                                            (char **)&packet.buf, &packet.buflen,
                                            (char **)&packet.ringBuf, &packet.ringBufLen, 0);
             if (ret != 0) {
-                log_error("RequestVideoStreamBuffer err, request=%d, valid=%d",
+                log_warn("RequestVideoStreamBuffer err, request=%d, valid=%d",
                           requestSize, validSize);
                 usleep(50 * 1000);
                 continue;
@@ -160,7 +160,7 @@ parser_exit:
     if (buf) {
         free(buf);
     }
-    log_info("parser thread exit");
+    log_info("==========> MediaPlayer-Parser Thread Ended!");
     pthread_exit(NULL);
     return NULL;
 }
@@ -177,7 +177,7 @@ static void *mp_decoder_thread(void *param)
 
     next_frame_time = mp_get_now_us() + 1000000 * 1000 / mp->framerate;
 
-    log_info("decoder thread start, target fps: %d", mp->framerate);
+    log_info("==========> MediaPlayer-Decoder Thread Started! target fps: %d", mp->framerate);
 
     while (1) {
         long long current_time = mp_get_now_us();
@@ -198,7 +198,7 @@ static void *mp_decoder_thread(void *param)
         pthread_rwlock_unlock(&mp->thread.rwlock);
 
         if (requested_stop) {
-            log_info("req stop,exiting");
+            // log_info("req stop,exiting");
             break;
         }
 
@@ -214,7 +214,9 @@ static void *mp_decoder_thread(void *param)
             if(pic){
                 ReturnPicture(decoder, pic);
             }
-            free(item);
+            if(item->on_heap){
+                free(item);
+            }
         }
 
         // long long start = mp_get_now_us();
@@ -271,6 +273,7 @@ static void *mp_decoder_thread(void *param)
                 item_to_display->mount.arg1 = (uint32_t)picture->pData1;
                 item_to_display->mount.arg2 = 0;
                 item_to_display->userdata = (void*)picture;
+                item_to_display->on_heap = true;
 
                 drm_warpper_enqueue_display_item(mp->drm_warpper, DRM_WARPPER_LAYER_VIDEO, item_to_display);
 
@@ -291,7 +294,7 @@ static void *mp_decoder_thread(void *param)
     mp->thread.state |= MEDIAPLAYER_DECODER_EXIT;
     pthread_rwlock_unlock(&mp->thread.rwlock);
 
-    log_info("decoder thread exit");
+    log_info("==========> MediaPlayer-Decoder Thread Ended!");
     pthread_exit(NULL);
     return NULL;
 }

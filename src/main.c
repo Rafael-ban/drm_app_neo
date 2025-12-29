@@ -7,10 +7,12 @@
 #include <signal.h>
 #include "mediaplayer.h"
 #include "lvgl_drm_warp.h"
+#include "timer.h"
 
 static drm_warpper_t g_drm_warpper;
 static mediaplayer_t g_mediaplayer;
 static lvgl_drm_warp_t g_lvgl_drm_warp;
+static prts_timer_t g_prts_timer;
 
 static int g_running = 1;
 void signal_handler(int sig)
@@ -19,10 +21,20 @@ void signal_handler(int sig)
     g_running = 0;
 }
 
+void prts_timer_callback(void *userdata){
+    int *x = (int *)userdata;
+    // log_info("==============> PRTS Timer Callback!");
+    drm_warpper_set_layer_coord(&g_drm_warpper, DRM_WARPPER_LAYER_UI, *x, 0);
+    if (*x > 128){
+        *x = -128;
+    }
+    *x = *x + 1;
+}
+
 int main(int argc, char *argv[]){
     if(argc == 2){
         if(strcmp(argv[1], "version") == 0){
-            log_info("EPASS_GIT_VERSION: %s", EPASS_GIT_VERSION);
+            printf("EPASS_GIT_VERSION: %s", EPASS_GIT_VERSION);
             return 0;
         }
         else if(strcmp(argv[1], "aux") == 0){
@@ -31,6 +43,13 @@ int main(int argc, char *argv[]){
 
     signal(SIGINT, signal_handler);
     signal(SIGTERM, signal_handler);
+
+    printf("EPASS_GIT_VERSION: %s\n", EPASS_GIT_VERSION);
+    printf(APP_BARNER);
+
+    log_info("==========> Starting EPass DRM APP!");
+
+    usleep(500000);
 
     if(drm_warpper_init(&g_drm_warpper) != 0){
         log_error("failed to initialize DRM warpper");
@@ -62,27 +81,41 @@ int main(int argc, char *argv[]){
     mediaplayer_set_video(&g_mediaplayer, "/assets/MS/loop.mp4");
     mediaplayer_start(&g_mediaplayer);
 
+    // ============ OVERLAY 初始化 ===============
+    drm_warpper_init_layer(
+        &g_drm_warpper, 
+        DRM_WARPPER_LAYER_OVERLAY, 
+        UI_WIDTH, UI_HEIGHT, 
+        DRM_WARPPER_LAYER_MODE_RGB565
+    );
 
     // ============ LVGL 初始化 ===============
     drm_warpper_init_layer(
         &g_drm_warpper, 
         DRM_WARPPER_LAYER_UI, 
         UI_WIDTH, UI_HEIGHT, 
-        DRM_WARPPER_LAYER_MODE_ARGB8888
+        DRM_WARPPER_LAYER_MODE_RGB565
     );
 
     lvgl_drm_warp_init(&g_lvgl_drm_warp, &g_drm_warpper);
-    log_info("after create ui");
 
-    log_info("drm_warpper addr:%p", &g_drm_warpper);
+    // ============ PRTS 定时器初始化 ===============
+
+    prts_timer_init(&g_prts_timer);
+
 
     // ============ 主循环 ===============
+    int x = -128;
+    prts_timer_handle_t handle;
+    prts_timer_create(&g_prts_timer, &handle, 0, 50000, -1, prts_timer_callback, &x);
+    // does nothing, stuck here until signal is received
     while(g_running){
-        lvgl_drm_warp_tick(&g_lvgl_drm_warp);
+        usleep(1000 * 1000);
     }
 
     /* cleanup */
-    log_info("shutting down");
+    log_info("==========> Shutting down EPass DRM APP!");
+    prts_timer_destroy(&g_prts_timer);
     lvgl_drm_warp_destroy(&g_lvgl_drm_warp);
     mediaplayer_stop(&g_mediaplayer);
     mediaplayer_destroy(&g_mediaplayer);

@@ -32,6 +32,7 @@ typedef struct {
 typedef struct {
     struct drm_srgn_atomic_commit_data mount;
     void* userdata;
+    bool on_heap;
 } drm_warpper_queue_item_t;
 
 typedef struct{
@@ -74,3 +75,6 @@ int drm_warpper_free_buffer(drm_warpper_t *drm_warpper,int layer_id,buffer_objec
 int drm_warpper_enqueue_display_item(drm_warpper_t *drm_warpper,int layer_id,drm_warpper_queue_item_t* item);
 int drm_warpper_dequeue_free_item(drm_warpper_t *drm_warpper,int layer_id,drm_warpper_queue_item_t** out_item);
 int drm_warpper_try_dequeue_free_item(drm_warpper_t *drm_warpper,int layer_id,drm_warpper_queue_item_t** out_item);
+
+int drm_warpper_set_layer_coord(drm_warpper_t *drm_warpper,int layer_id,int x,int y);
+int drm_warpper_set_layer_alpha(drm_warpper_t *drm_warpper,int layer_id,int alpha);

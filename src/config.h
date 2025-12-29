@@ -10,20 +10,24 @@
     #define VIDEO_HEIGHT 640
     #define UI_WIDTH 360
     #define UI_HEIGHT 640
+    #define OVERLAY_WIDTH 360
+    #define OVERLAY_HEIGHT 640
     
     // UI-信息Overlay叠层 左上角的矩形偏移量
-    #define UI_OVERLAY_ARKNIGHTS_RECT_OFFSET_X 60
+    #define OVERLAY_ARKNIGHTS_RECT_OFFSET_X 60
 
     // UI-信息Overlay叠层 左下角“- Arknights -”矩形文字 偏移量
-    #define UI_OVERLAY_ARKNIGHTS_AK_BAR_OFFSET_X 120
-    #define UI_OVERLAY_ARKNIGHTS_AK_BAR_OFFSET_Y 120
+    #define OVERLAY_ARKNIGHTS_AK_BAR_OFFSET_X 120
+    #define OVERLAY_ARKNIGHTS_AK_BAR_OFFSET_Y 120
+    
 #elif defined(USE_480_854_SCREEN)
     #error "USE_480_854_SCREEN is not supported yet!"
 #elif defined(USE_720_1280_SCREEN)
     #error "USE_720_1280_SCREEN is not supported yet!"
 #endif // USE_360_640_SCREEN, USE_480_854_SCREEN, USE_720_1280_SCREEN
 
-#define DRM_WARPPER_LAYER_UI 1
+#define DRM_WARPPER_LAYER_UI 2
+#define DRM_WARPPER_LAYER_OVERLAY 1
 #define DRM_WARPPER_LAYER_VIDEO 0
 
 #define SETTINGS_FILE_PATH "/root/epass_cfg.bin"
@@ -38,3 +42,16 @@
 
 
 #define UI_OVERLAY_ARKNIGHTS_PREFIX "A:/root/res/"
+#define APP_SUBCODENAME "proj0cpy"
+#define APP_BARNER \
+    "           =-+           \n" \
+    "     +@@@@@  @@@@@@        Rhodes Island\n" \
+    "     +@*.:@@ @@  %@-       Electrnic Pass\n" \
+    "     *@@@%:  @@@@@=:       DRM System\n" \
+    "   ==+@      @@  @@ .=   \n" \
+    "  +                   *    CodeName:\n" \
+    "   ==%@@@@@@ %@@@@@ .+     " APP_SUBCODENAME "\n" \
+    "     :  @=   %@%.  -       \n" \
+    "       :@=      +@@        Rhodes Island\n" \
+    "        @#   %@@@@@        Engineering Dept.\n" \
+    "           =:=        \n"

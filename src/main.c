@@ -8,8 +8,10 @@
 #include <signal.h>
 #include "mediaplayer.h"
 #include "lvgl_drm_warp.h"
+#include "overlay/overlay.h"
 #include "timer.h"
 #include "layer_animation.h"
+#include "utils/timer.h"
 
 static drm_warpper_t g_drm_warpper;
 static mediaplayer_t g_mediaplayer;
@@ -24,14 +26,9 @@ void signal_handler(int sig)
     g_running = 0;
 }
 
-void prts_timer_callback(void *userdata){
-    int *x = (int *)userdata;
-    // log_info("==============> PRTS Timer Callback!");
-    drm_warpper_set_layer_coord(&g_drm_warpper, DRM_WARPPER_LAYER_UI, *x, 0);
-    if (*x > 128){
-        *x = -128;
-    }
-    *x = *x + 1;
+void mount_video_layer_callback(void *userdata,bool is_last){
+    buffer_object_t *video_buf = (buffer_object_t *)userdata;
+    drm_warpper_mount_layer(&g_drm_warpper, DRM_WARPPER_LAYER_VIDEO, 0, 0, video_buf);
 }
 
 int main(int argc, char *argv[]){
@@ -80,7 +77,7 @@ int main(int argc, char *argv[]){
     // 期待有能人帮优化掉这个allocate。
     buffer_object_t video_buf;
     drm_warpper_allocate_buffer(&g_drm_warpper, DRM_WARPPER_LAYER_VIDEO, &video_buf);
-    drm_warpper_mount_layer(&g_drm_warpper, DRM_WARPPER_LAYER_VIDEO, 0, 0, &video_buf);
+    // drm_warpper_mount_layer(&g_drm_warpper, DRM_WARPPER_LAYER_VIDEO, 0, 0, &video_buf);
 
     /* initialize mediaplayer */
     if (mediaplayer_init(&g_mediaplayer, &g_drm_warpper) != 0) {
@@ -97,8 +94,17 @@ int main(int argc, char *argv[]){
         &g_drm_warpper, 
         DRM_WARPPER_LAYER_OVERLAY, 
         UI_WIDTH, UI_HEIGHT, 
-        DRM_WARPPER_LAYER_MODE_RGB565
+        DRM_WARPPER_LAYER_MODE_ARGB8888
     );
+
+    buffer_object_t overlay_buf;
+    drm_warpper_allocate_buffer(&g_drm_warpper, DRM_WARPPER_LAYER_OVERLAY, &overlay_buf);
+    drm_warpper_mount_layer(&g_drm_warpper, DRM_WARPPER_LAYER_OVERLAY, OVERLAY_WIDTH, 0, &overlay_buf);
+    for(int y=0; y<OVERLAY_HEIGHT; y++){
+        for(int x=0; x<OVERLAY_WIDTH; x++){
+            *((uint32_t *)(overlay_buf.vaddr) + x + y * OVERLAY_WIDTH) = 0xFFFFFFFF;
+        }
+    }
 
     // ============ LVGL 初始化 ===============
     drm_warpper_init_layer(
@@ -109,8 +115,42 @@ int main(int argc, char *argv[]){
     );
 
     lvgl_drm_warp_init(&g_lvgl_drm_warp, &g_drm_warpper,&g_layer_animation);
-
     drm_warpper_set_layer_coord(&g_drm_warpper, DRM_WARPPER_LAYER_UI, 0, SCREEN_HEIGHT);
+
+
+    // 程序启动动画
+
+    // 用Overlay层，先从屏幕右侧进入
+    layer_animation_ease_out_move(
+        &g_layer_animation, 
+        DRM_WARPPER_LAYER_OVERLAY, 
+        OVERLAY_WIDTH, 0, 
+        0, 0, 
+        1000 * 1000, 
+        0
+    );
+
+    // 一边进入一边渐变到白色
+    layer_animation_fade_in(
+        &g_layer_animation, 
+        DRM_WARPPER_LAYER_OVERLAY, 
+        1000 * 1000, 
+        0
+    );
+
+    // 全部遮住以后挂载video层
+    prts_timer_handle_t init_handler;
+    prts_timer_create(&init_handler,1000*1000,0,1,mount_video_layer_callback,&video_buf);
+
+    // 渐变到透明
+    layer_animation_fade_out(
+        &g_layer_animation, 
+        DRM_WARPPER_LAYER_OVERLAY, 
+        1000 * 1000, 
+        2000 * 1000
+    );
+
+    
     // ============ 主循环 ===============
     // does nothing, stuck here until signal is received
     while(g_running){

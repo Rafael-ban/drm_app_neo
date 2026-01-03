@@ -73,7 +73,7 @@ void lvgl_drm_warp_init(lvgl_drm_warp_t *lvgl_drm_warp,drm_warpper_t *drm_warppe
     drm_warpper_allocate_buffer(drm_warpper, DRM_WARPPER_LAYER_UI, &lvgl_drm_warp->ui_buf_2);
 
     // modeset
-    drm_warpper_mount_layer(drm_warpper, DRM_WARPPER_LAYER_UI, 0, 0, &lvgl_drm_warp->ui_buf_1);
+    drm_warpper_mount_layer(drm_warpper, DRM_WARPPER_LAYER_UI, 0, SCREEN_HEIGHT, &lvgl_drm_warp->ui_buf_1);
 
     lvgl_drm_warp->ui_buf_1_item.mount.type = DRM_SRGN_ATOMIC_COMMIT_MOUNT_FB_NORMAL;
     lvgl_drm_warp->ui_buf_1_item.mount.arg0 = (uint32_t)lvgl_drm_warp->ui_buf_1.vaddr;

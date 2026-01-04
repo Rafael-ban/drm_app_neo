@@ -50,7 +50,9 @@ add_executable(epass_drm_app
   src/utils/spsc_queue.c
   src/utils/log.c
   src/utils/timer.c
-
+  src/utils/settings.c
+  src/utils/storage.c
+  src/utils/sysinfo.c
 
 )
 
@@ -72,8 +74,12 @@ target_compile_definitions(epass_drm_app PRIVATE
   _DEFAULT_SOURCE
 )
 
+string(TIMESTAMP COMPILE_TIME "%Y-%m-%d %H:%M:%S")
+
+
 target_compile_definitions(epass_drm_app PRIVATE 
  EPASS_GIT_VERSION="${GIT_VERSION}"
+ COMPILE_TIME="${COMPILE_TIME}"
 )
 
 target_compile_options(epass_drm_app PRIVATE

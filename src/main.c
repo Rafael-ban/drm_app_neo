@@ -8,16 +8,19 @@
 #include <signal.h>
 #include "mediaplayer.h"
 #include "lvgl_drm_warp.h"
-#include "overlay/overlay.h"
+#include "overlay.h"
 #include "timer.h"
 #include "layer_animation.h"
-#include "utils/timer.h"
+#include "settings.h"
+#include "timer.h"
 
-static drm_warpper_t g_drm_warpper;
-static mediaplayer_t g_mediaplayer;
-static lvgl_drm_warp_t g_lvgl_drm_warp;
-static prts_timer_t g_prts_timer;
-static layer_animation_t g_layer_animation;
+/* global variables */
+drm_warpper_t g_drm_warpper;
+mediaplayer_t g_mediaplayer;
+lvgl_drm_warp_t g_lvgl_drm_warp;
+prts_timer_t g_prts_timer;
+layer_animation_t g_layer_animation;
+settings_t g_settings;
 
 int g_running = 1;
 void signal_handler(int sig)
@@ -34,7 +37,8 @@ void mount_video_layer_callback(void *userdata,bool is_last){
 int main(int argc, char *argv[]){
     if(argc == 2){
         if(strcmp(argv[1], "version") == 0){
-            printf("EPASS_GIT_VERSION: %s", EPASS_GIT_VERSION);
+            printf("EPASS_NEO_GIT_VERSION: %s", EPASS_GIT_VERSION);
+            printf("COMPILE_TIME: %s", COMPILE_TIME);
             return 0;
         }
         else if(strcmp(argv[1], "aux") == 0){
@@ -44,7 +48,8 @@ int main(int argc, char *argv[]){
     signal(SIGINT, signal_handler);
     signal(SIGTERM, signal_handler);
 
-    printf("EPASS_GIT_VERSION: %s\n", EPASS_GIT_VERSION);
+    printf("EPASS_NEO_GIT_VERSION: %s\n", EPASS_GIT_VERSION);
+    printf("COMPILE_TIME: %s\n", COMPILE_TIME);
     puts(APP_BARNER);
 
     log_info("==========> Starting EPass DRM APP!");
@@ -57,9 +62,10 @@ int main(int argc, char *argv[]){
     }
 
     // ============ PRTS 定时器初始化 ===============
-
     prts_timer_init(&g_prts_timer);
 
+    // ============ 设置 初始化 ===============
+    settings_init(&g_settings);
 
     // ============ 图层动画 初始化 ===============
     layer_animation_init(&g_layer_animation, &g_drm_warpper);
@@ -126,7 +132,7 @@ int main(int argc, char *argv[]){
         DRM_WARPPER_LAYER_OVERLAY, 
         OVERLAY_WIDTH, 0, 
         0, 0, 
-        1000 * 1000, 
+        500 * 1000, 
         0
     );
 
@@ -134,20 +140,20 @@ int main(int argc, char *argv[]){
     layer_animation_fade_in(
         &g_layer_animation, 
         DRM_WARPPER_LAYER_OVERLAY, 
-        1000 * 1000, 
+        500 * 1000, 
         0
     );
 
     // 全部遮住以后挂载video层
     prts_timer_handle_t init_handler;
-    prts_timer_create(&init_handler,1000*1000,0,1,mount_video_layer_callback,&video_buf);
+    prts_timer_create(&init_handler,500*1000,0,1,mount_video_layer_callback,&video_buf);
 
     // 渐变到透明
     layer_animation_fade_out(
         &g_layer_animation, 
         DRM_WARPPER_LAYER_OVERLAY, 
-        1000 * 1000, 
-        2000 * 1000
+        500 * 1000, 
+        1000 * 1000
     );
 
     

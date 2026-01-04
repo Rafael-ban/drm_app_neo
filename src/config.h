@@ -19,6 +19,7 @@
 #define SETTINGS_FILE_PATH "/root/epass_cfg.bin"
 #define SETTINGS_MAGIC 0x45504153434F4E46
 #define SETTINGS_VERSION 1
+#define SETTINGS_BRIGHTNESS_PATH "/sys/class/backlight/backlight/brightness"
 
 // ========== PRTS Timer Configuration ==========
 #define PRTS_TIMER_MAX 1024
@@ -39,7 +40,10 @@
     #define SCREEN_WIDTH 360
     #define SCREEN_HEIGHT 640
 
-    #define UI_OPLIST_Y 200
+    // 干员列表和亮度设置的Y坐标
+    #define UI_OPLIST_Y 250
+    #define UI_BRIGHTNESS_Y 500
+
     
     // UI-信息Overlay叠层 左上角的矩形偏移量
     #define OVERLAY_ARKNIGHTS_RECT_OFFSET_X 60
@@ -74,3 +78,13 @@
 
 // ========== UI Configuration ==========
 #define UI_LAYER_ANIMATION_DURATION (500 * 1000) // 500ms
+
+// ========== Storage Configuration ==========
+#define NAND_MOUNT_POINT "/"
+#define SD_MOUNT_POINT "/sd"
+#define SD_DEV_PATH "/dev/mmcblk0"
+
+// ========== System Information Configuration ==========
+#define SYSINFO_MEMINFO_PATH "/proc/meminfo"
+#define SYSINFO_OSRELEASE_PATH "/etc/os-release"
+#define SYSINFO_APP_PATH "/root/epass_drm_app"

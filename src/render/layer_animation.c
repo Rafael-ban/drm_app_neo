@@ -1,8 +1,9 @@
-#include "layer_animation.h"
-#include "timer.h"
-#include "drm_warpper.h"
-#include "log.h"
 #include <stdlib.h>
+
+#include "render/layer_animation.h"
+#include "utils/timer.h"
+#include "driver/drm_warpper.h"
+#include "utils/log.h"
 #include "lvgl.h"
 
 int layer_animation_init(layer_animation_t *layer_animation,drm_warpper_t *drm_warpper){

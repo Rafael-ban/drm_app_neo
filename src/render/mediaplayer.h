@@ -1,13 +1,13 @@
 #pragma once
 
 #include "cdx_config.h"
-#include "CdxParser.h"
-#include "vdecoder.h"
-#include "memoryAdapter.h"
+#include <CdxParser.h>
+#include <vdecoder.h>
+#include <memoryAdapter.h>
 #include <stdint.h>
 #include <pthread.h>
 #include "config.h"
-#include "drm_warpper.h"
+#include "driver/drm_warpper.h"
 
 /* fixed output frame size */
 #define MEDIAPLAYER_FRAME_WIDTH   VIDEO_WIDTH

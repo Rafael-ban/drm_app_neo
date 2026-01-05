@@ -1,16 +1,17 @@
-#include "lvgl_drm_warp.h"
-#include "config.h"
-#include "layer_animation.h"
-#include "log.h"
 #include <stdbool.h>
 #include <stdio.h>
 #include <time.h>
 #include <unistd.h>
-#include "vars.h"
-#include "string.h"
-#include "stdlib.h"
-#include "ui.h"
-#include "key_enc_evdev.h"
+#include <string.h>
+#include <stdlib.h>
+
+#include "render/lvgl_drm_warp.h"
+#include "config.h"
+#include "render/layer_animation.h"
+#include "utils/log.h"
+#include "ui/ui.h"
+#include "ui/vars.h"
+#include "driver/key_enc_evdev.h"
 
 static uint32_t lvgl_drm_warp_tick_get_cb(void)
 {

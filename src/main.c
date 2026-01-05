@@ -1,18 +1,19 @@
-#include "config.h"
-#include "drm_warpper.h"
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
 #include <stdint.h>
-#include "log.h"
 #include <signal.h>
-#include "mediaplayer.h"
-#include "lvgl_drm_warp.h"
-#include "overlay.h"
-#include "timer.h"
-#include "layer_animation.h"
-#include "settings.h"
-#include "timer.h"
+
+#include "config.h"
+#include "driver/drm_warpper.h"
+#include "utils/log.h"
+#include "render/mediaplayer.h"
+#include "render/lvgl_drm_warp.h"
+#include "overlay/overlay.h"
+#include "utils/timer.h"
+#include "render/layer_animation.h"
+#include "utils/settings.h"
+#include "utils/timer.h"
 
 /* global variables */
 drm_warpper_t g_drm_warpper;

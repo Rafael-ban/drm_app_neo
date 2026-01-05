@@ -1,5 +1,5 @@
-#include "fbdraw.h"
-#include "log.h"
+#include "render/fbdraw.h"
+#include "utils/log.h"
 #include "config.h"
 #include <fcntl.h>
 #include <unistd.h>

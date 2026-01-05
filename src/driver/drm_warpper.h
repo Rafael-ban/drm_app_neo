@@ -3,9 +3,10 @@
 #include <stdint.h>
 #include <semaphore.h>
 #include <pthread.h>
-#include "spsc_queue.h"
-#include "srgn_drm.h"
-#include "stdbool.h"
+#include <stdbool.h>
+
+#include "utils/spsc_queue.h"
+#include "driver/srgn_drm.h"
 
 #pragma once
 

@@ -1,7 +1,6 @@
 #pragma once
-#include "drm_warpper.h"
-#include "layer_animation.h"
-#include "timer.h"
+#include "driver/drm_warpper.h"
+#include "render/layer_animation.h"
 
 typedef struct {
     drm_warpper_t* drm_warpper;

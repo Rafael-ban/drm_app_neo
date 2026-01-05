@@ -1,5 +1,5 @@
-#include "storage.h"
-#include "log.h"
+#include "utils/storage.h"
+#include "utils/log.h"
 #include "config.h"
 #include <sys/statvfs.h>
 

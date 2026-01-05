@@ -1,4 +1,4 @@
-#include "spsc_queue.h"
+#include "utils/spsc_queue.h"
 
 #include <stdlib.h>
 #include <errno.h>

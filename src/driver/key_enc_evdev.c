@@ -1,13 +1,12 @@
-// key as encoder with evdev support
-
-#include "key_enc_evdev.h"
-#include "stdint.h"
-#include "lvgl.h"
-#include "unistd.h"
+#include <stdint.h>
+#include <unistd.h>
 #include <fcntl.h>
-#include "log.h"
 #include <linux/input.h>
 #include <errno.h>
+
+#include "utils/log.h"
+#include "lvgl.h"
+#include "driver/key_enc_evdev.h"
 
 
 static int key_enc_evdev_process_key(uint16_t code)

@@ -1,5 +1,5 @@
-#include "settings.h"
-#include "log.h"
+#include "utils/settings.h"
+#include "utils/log.h"
 #include "config.h"
 
 static void log_settings(settings_t *settings){

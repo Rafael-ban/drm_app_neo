@@ -1,4 +1,3 @@
-#include "drm_warpper.h"
 #include <drm_fourcc.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -11,10 +10,12 @@
 #include <xf86drmMode.h>
 #include <sys/mman.h>
 #include <unistd.h>
-#include "log.h"
-#include "srgn_drm.h"
+
+#include "driver/drm_warpper.h"
+#include "utils/log.h"
+#include "driver/srgn_drm.h"
 #include "config.h"
-#include "spsc_queue.h"
+#include "utils/spsc_queue.h"
 
 static inline int DRM_IOCTL(int fd, unsigned long cmd, void *arg) {
   int ret = drmIoctl(fd, cmd, arg);

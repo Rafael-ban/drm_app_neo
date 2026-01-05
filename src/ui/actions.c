@@ -1,15 +1,16 @@
-#include "actions.h"
-#include "vars.h"
 #include <stdint.h>
-#include "log.h"
-#include "layer_animation.h"
+#include <stdlib.h>
+
+#include "ui/actions.h"
+#include "ui/vars.h"
+#include "utils/log.h"
+#include "render/layer_animation.h"
 #include "config.h"
-#include "stdlib.h"
-#include "lvgl_drm_warp.h"
-#include "ui.h"
-#include "settings.h"
-#include "storage.h"
-#include "sysinfo.h"
+#include "render/lvgl_drm_warp.h"
+#include "ui/ui.h"
+#include "utils/settings.h"
+#include "utils/storage.h"
+#include "utils/sysinfo.h"
 
 extern settings_t g_settings;
 

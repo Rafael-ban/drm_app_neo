@@ -1,4 +1,3 @@
-// key as encoder with evdev support
 #pragma once
 
 #include "lvgl.h"

@@ -6,15 +6,16 @@
 #include <pthread.h>
 #include <sys/time.h>
 #include <unistd.h>
+#include <CdxParser.h>
+#include <vdecoder.h>
+#include <memoryAdapter.h>
 
-#include "drm_warpper.h"
-#include "log.h"
+
+#include "driver/drm_warpper.h"
+#include "utils/log.h"
 #include "cdx_config.h"
-#include "CdxParser.h"
-#include "vdecoder.h"
-#include "memoryAdapter.h"
 #include "config.h"
-#include "srgn_drm.h"
+#include "driver/srgn_drm.h"
 
 /* external cedarx plugin entry */
 extern void AddVDPlugin(void);

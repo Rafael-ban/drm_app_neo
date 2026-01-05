@@ -1,10 +1,10 @@
 #pragma once
 
 #include "lvgl.h"
-#include "drm_warpper.h"
+#include "driver/drm_warpper.h"
 #include <pthread.h>
-#include "layer_animation.h"
-#include "key_enc_evdev.h"
+#include "render/layer_animation.h"
+#include "driver/key_enc_evdev.h"
 
 typedef struct {
     drm_warpper_t *drm_warpper;

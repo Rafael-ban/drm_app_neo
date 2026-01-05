@@ -1,13 +1,14 @@
-#include "overlay.h"
+#include <stdint.h>
+#include <stdbool.h>
+#include <string.h>
+
+#include "overlay/overlay.h"
 #include "config.h"
-#include "drm_warpper.h"
-#include "stdint.h"
-#include "srgn_drm.h"
-#include "stdbool.h"
-#include "string.h"
-#include "log.h"
-#include "timer.h"
-#include "layer_animation.h"
+#include "driver/drm_warpper.h"
+#include "driver/srgn_drm.h"
+#include "utils/log.h"
+#include "utils/timer.h"
+#include "render/layer_animation.h"
 
 int overlay_init(overlay_t* overlay,drm_warpper_t* drm_warpper,layer_animation_t* layer_animation){
 

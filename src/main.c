@@ -10,6 +10,7 @@
 #include "render/mediaplayer.h"
 #include "render/lvgl_drm_warp.h"
 #include "overlay/overlay.h"
+#include "overlay/transitions.h"
 #include "utils/timer.h"
 #include "render/layer_animation.h"
 #include "utils/settings.h"
@@ -35,6 +36,7 @@ void signal_handler(int sig)
 
 void mount_video_layer_callback(void *userdata,bool is_last){
     drm_warpper_mount_layer(&g_drm_warpper, DRM_WARPPER_LAYER_VIDEO, 0, 0, &g_video_buf);
+    drm_warpper_set_layer_coord(&g_drm_warpper, DRM_WARPPER_LAYER_OVERLAY, 0,0);
 }
 
 int main(int argc, char *argv[]){
@@ -120,9 +122,13 @@ int main(int argc, char *argv[]){
     drm_warpper_set_layer_coord(&g_drm_warpper, DRM_WARPPER_LAYER_UI, 0, SCREEN_HEIGHT);
 
 
-    overlay_schedule_startup_animation(&g_overlay,mount_video_layer_callback);
-
-    
+    oltr_params_t fade_params;
+    fade_params.duration = 500000;
+    fade_params.image_path = "/root/u_boot_logo.png";
+    fade_params.background_color = 0xFFFFFFFF;
+    // overlay_transition_fade(&g_overlay,mount_video_layer_callback,NULL,&fade_params);
+    // overlay_transition_move(&g_overlay,mount_video_layer_callback,NULL,&fade_params);
+    overlay_transition_swipe(&g_overlay,mount_video_layer_callback,NULL,&fade_params);
     // ============ 主循环 ===============
     // does nothing, stuck here until signal is received
     while(g_running){

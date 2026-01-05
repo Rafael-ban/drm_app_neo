@@ -47,7 +47,8 @@ add_executable(epass_drm_app
   ${UI_SOURCES}
 
   src/overlay/overlay.c
-
+  src/overlay/transitions.c
+  src/overlay/opinfo.c
 
   src/utils/spsc_queue.c
   src/utils/log.c

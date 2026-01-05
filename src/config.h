@@ -43,6 +43,7 @@
     // 干员列表和亮度设置的Y坐标
     #define UI_OPLIST_Y 250
     #define UI_BRIGHTNESS_Y 500
+    #define UI_SPINNER_Y 580
 
     
     // UI-信息Overlay叠层 左上角的矩形偏移量
@@ -78,6 +79,11 @@
 
 // ========== UI Configuration ==========
 #define UI_LAYER_ANIMATION_DURATION (500 * 1000) // 500ms
+
+#define UI_LAYER_ANIMATION_INTRO_SPINNER_TRANSITION_DURATION (200 * 1000) // 200ms
+#define UI_LAYER_ANIMATION_INTRO_LOADSCREEN_DELAY (500 * 1000)
+#define UI_LAYER_ANIMATION_INTRO_DEST_TRANSITION_DURATION (300 * 1000) // 300ms
+#define UI_LAYER_ANIMATION_INTRO_DEST_TRANSITION_DELAY (500 * 1000) // 500ms
 
 // ========== Storage Configuration ==========
 #define NAND_MOUNT_POINT "/"

@@ -81,6 +81,10 @@ int layer_animation_cubic_bezier_move(layer_animation_t *layer_animation,int lay
         move_data->yarr[i] = new_value;
     }
 
+    // 确保最后一个点是目标点
+    move_data->xarr[step_count - 1] = xe;
+    move_data->yarr[step_count - 1] = ye;
+
     prts_timer_handle_t timer_handle;
 
     int ret = prts_timer_create(
@@ -201,6 +205,8 @@ int layer_animation_fade_in(layer_animation_t *layer_animation,int layer_id,int 
     for (int i = 0; i < step_count; i++){
         fade_data->alphaarr[i] = 0 + (255 - 0) * i / step_count;
     }
+    // 确保最后一个点是目标点
+    fade_data->alphaarr[step_count - 1] = 255;
     prts_timer_handle_t timer_handle;
     int ret = prts_timer_create(
         &timer_handle, 
@@ -243,6 +249,8 @@ int layer_animation_fade_out(layer_animation_t *layer_animation,int layer_id,int
     for (int i = 0; i < step_count; i++){
         fade_data->alphaarr[i] = 255 - (255 - 0) * i / step_count;
     }
+    // 确保最后一个点是目标点
+    fade_data->alphaarr[step_count - 1] = 0;
     prts_timer_handle_t timer_handle;
     int ret = prts_timer_create(
         &timer_handle, 

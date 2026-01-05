@@ -2,6 +2,7 @@
 #include <stdlib.h>
 
 #include "ui/actions.h"
+#include "screens.h"
 #include "ui/vars.h"
 #include "utils/log.h"
 #include "render/layer_animation.h"
@@ -11,6 +12,7 @@
 #include "utils/settings.h"
 #include "utils/storage.h"
 #include "utils/sysinfo.h"
+#include "utils/timer.h"
 
 extern settings_t g_settings;
 
@@ -208,6 +210,48 @@ void action_show_sysinfo(lv_event_t * e){
 }
 
 
+static void delayed_load_screen_cb(void* arg, bool is_last){
+    enum ScreensEnum screen_id = (enum ScreensEnum)arg;
+    loadScreen(screen_id);
+}
+
+
+static void schedule_screen_intro_transition(lv_display_t* disp, enum ScreensEnum to_screen){
+    lvgl_drm_warp_t* lvgl_drm_warp = (lvgl_drm_warp_t*)lv_display_get_driver_data(disp);
+    prts_timer_handle_t timer_handle;
+    int target_y;
+
+    if(to_screen == SCREEN_ID_OPLIST){
+        target_y = UI_OPLIST_Y;
+    }
+    else{
+        target_y = 0;
+    }
+
+    prts_timer_create(
+        &timer_handle, 
+        UI_LAYER_ANIMATION_INTRO_LOADSCREEN_DELAY, 
+        0, 
+        1, 
+        delayed_load_screen_cb, 
+        (void*)to_screen
+    );
+    layer_animation_ease_in_out_move(
+        lvgl_drm_warp->layer_animation, 
+        DRM_WARPPER_LAYER_UI, 
+        0, SCREEN_HEIGHT, 
+        0, UI_SPINNER_Y, 
+        UI_LAYER_ANIMATION_INTRO_SPINNER_TRANSITION_DURATION, 0);
+
+    layer_animation_ease_in_out_move(
+        lvgl_drm_warp->layer_animation, 
+        DRM_WARPPER_LAYER_UI, 
+        0, UI_SPINNER_Y, 
+        0, target_y, 
+        UI_LAYER_ANIMATION_INTRO_DEST_TRANSITION_DURATION, 
+        UI_LAYER_ANIMATION_INTRO_DEST_TRANSITION_DELAY);
+}
+
 // 全局按钮回调。主要用于屏幕切换时放过渡。
 void screen_key_event_cb(uint32_t key){
     lv_display_t* disp = lv_display_get_default();
@@ -253,35 +297,18 @@ void screen_key_event_cb(uint32_t key){
     }
 
     // spinner（空界面），处理ui出现
+
     switch(key){
         // go to oplist screen
         case LV_KEY_LEFT:
         case LV_KEY_RIGHT:
-            layer_animation_ease_in_out_move(
-                lvgl_drm_warp->layer_animation, 
-                DRM_WARPPER_LAYER_UI, 
-                0, SCREEN_HEIGHT, 
-                0, UI_OPLIST_Y, 
-                UI_LAYER_ANIMATION_DURATION, 0);
-            loadScreen(SCREEN_ID_OPLIST);
+           schedule_screen_intro_transition(disp, SCREEN_ID_OPLIST);
             break;
         case LV_KEY_ENTER:
-            layer_animation_ease_in_out_move(
-                lvgl_drm_warp->layer_animation, 
-                DRM_WARPPER_LAYER_UI, 
-                0, SCREEN_HEIGHT, 
-                0, 0, 
-                UI_LAYER_ANIMATION_DURATION, 0);
-            loadScreen(SCREEN_ID_DISPLAYIMG);
+            schedule_screen_intro_transition(disp, SCREEN_ID_DISPLAYIMG);
             break;
         case LV_KEY_ESC:
-            layer_animation_ease_in_out_move(
-                lvgl_drm_warp->layer_animation, 
-                DRM_WARPPER_LAYER_UI, 
-                0, SCREEN_HEIGHT, 
-                0, 0, 
-                UI_LAYER_ANIMATION_DURATION, 0);
-            loadScreen(SCREEN_ID_MAINMENU);
+            schedule_screen_intro_transition(disp, SCREEN_ID_MAINMENU);
             break;
     }
 }

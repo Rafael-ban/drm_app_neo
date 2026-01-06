@@ -2,6 +2,7 @@
 #include "driver/drm_warpper.h"
 #include "render/layer_animation.h"
 #include <pthread.h>
+#include "utils/timer.h"
 
 typedef enum {
     OVERLAY_WORKER_MODE_TRANSITION,
@@ -33,6 +34,8 @@ typedef struct {
     drm_warpper_queue_item_t overlay_buf_2_item;
 
     overlay_worker_t worker;
+
+    prts_timer_handle_t overlay_timer_handle;
 } overlay_t;
 
 uint64_t get_us(void);

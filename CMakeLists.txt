@@ -43,6 +43,7 @@ add_executable(epass_drm_app
   src/render/mediaplayer.c
   src/render/layer_animation.c
   src/render/lvgl_drm_warp.c
+  src/render/fbdraw.c
 
   ${UI_SOURCES}
 
@@ -56,7 +57,8 @@ add_executable(epass_drm_app
   src/utils/settings.c
   src/utils/storage.c
   src/utils/sysinfo.c
-
+  src/utils/cacheassets.c
+  src/utils/code128.c
 )
 
 target_include_directories(epass_drm_app PRIVATE

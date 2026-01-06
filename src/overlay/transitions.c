@@ -43,7 +43,9 @@ void overlay_transition_fade(overlay_t* overlay,void (*middle_cb)(void *userdata
     for(int y=0; y<OVERLAY_HEIGHT; y++){
         for(int x=0; x<OVERLAY_WIDTH; x++){
             if(x >= image_start_x && x < image_start_x + w && y >= image_start_y && y < image_start_y + h){
-                *((uint32_t *)(vaddr) + x + y * OVERLAY_WIDTH) = *((uint32_t *)(pixdata) + (x - image_start_x) + (y - image_start_y) * w);
+                uint32_t bgra_pixel = *((uint32_t *)(pixdata) + (x - image_start_x) + (y - image_start_y) * w);
+                uint32_t rgb_pixel = (bgra_pixel & 0x000000FF) << 16 | (bgra_pixel & 0x0000FF00) | (bgra_pixel & 0x00FF0000) >> 16 | (bgra_pixel & 0xFF000000);
+                *((uint32_t *)(vaddr) + x + y * OVERLAY_WIDTH) = rgb_pixel;
             }
             else{
                 *((uint32_t *)(vaddr) + x + y * OVERLAY_WIDTH) = params->background_color;
@@ -111,7 +113,9 @@ void overlay_transition_move(overlay_t* overlay,void (*middle_cb)(void *userdata
     for(int y=0; y<OVERLAY_HEIGHT; y++){
         for(int x=0; x<OVERLAY_WIDTH; x++){
             if(x >= image_start_x && x < image_start_x + w && y >= image_start_y && y < image_start_y + h){
-                *((uint32_t *)(vaddr) + x + y * OVERLAY_WIDTH) = *((uint32_t *)(pixdata) + (x - image_start_x) + (y - image_start_y) * w);
+                uint32_t bgra_pixel = *((uint32_t *)(pixdata) + (x - image_start_x) + (y - image_start_y) * w);
+                uint32_t rgb_pixel = (bgra_pixel & 0x000000FF) << 16 | (bgra_pixel & 0x0000FF00) | (bgra_pixel & 0x00FF0000) >> 16 | (bgra_pixel & 0xFF000000);
+                *((uint32_t *)(vaddr) + x + y * OVERLAY_WIDTH) = rgb_pixel;
             }
             else{
                 *((uint32_t *)(vaddr) + x + y * OVERLAY_WIDTH) = params->background_color;
@@ -178,7 +182,7 @@ typedef struct {
 // 为了你的理智着想，我也不建议你来这么写
 static void swipe_worker(void *userdata,int skipped_frames){
     swipe_worker_data_t* data = (swipe_worker_data_t*)userdata;
-    log_trace("swipe_worker: skipped_frames=%d,curr_frame=%d,total_frames=%d", skipped_frames, data->curr_frame, data->total_frames);
+    // log_trace("swipe_worker: skipped_frames=%d,curr_frame=%d,total_frames=%d", skipped_frames, data->curr_frame, data->total_frames);
     drm_warpper_set_layer_coord(data->overlay->drm_warpper, DRM_WARPPER_LAYER_OVERLAY, 0, 0);
     drm_warpper_queue_item_t* item;
     drm_warpper_dequeue_free_item(data->overlay->drm_warpper, DRM_WARPPER_LAYER_OVERLAY, &item);
@@ -202,7 +206,9 @@ static void swipe_worker(void *userdata,int skipped_frames){
         for(int y=draw_start_y; y<draw_end_y; y++){
             for(int x=0; x<OVERLAY_WIDTH; x++){
                 if(x >= data->image_start_x && x < data->image_start_x + data->w && y >= data->image_start_y && y < data->image_start_y + data->h){
-                    *((uint32_t *)(vaddr) + x + y * OVERLAY_WIDTH) = *((uint32_t *)(data->pixdata) + (x - data->image_start_x) + (y - data->image_start_y) * data->w);
+                    uint32_t bgra_pixel = *((uint32_t *)(data->pixdata) + (x - data->image_start_x) + (y - data->image_start_y) * data->w);
+                    uint32_t rgb_pixel = (bgra_pixel & 0x000000FF) << 16 | (bgra_pixel & 0x0000FF00) | (bgra_pixel & 0x00FF0000) >> 16 | (bgra_pixel & 0xFF000000);
+                    *((uint32_t *)(vaddr) + x + y * OVERLAY_WIDTH) = rgb_pixel;
                 }
                 else{
                     *((uint32_t *)(vaddr) + x + y * OVERLAY_WIDTH) = data->background_color;
@@ -220,7 +226,9 @@ static void swipe_worker(void *userdata,int skipped_frames){
         for(int y=draw_start_y; y<draw_end_y; y++){
             for(int x=0; x<OVERLAY_WIDTH; x++){
                 if(x >= data->image_start_x && x < data->image_start_x + data->w && y >= data->image_start_y && y < data->image_start_y + data->h){
-                    *((uint32_t *)(vaddr) + x + y * OVERLAY_WIDTH) = *((uint32_t *)(data->pixdata) + (x - data->image_start_x) + (y - data->image_start_y) * data->w);
+                    uint32_t bgra_pixel = *((uint32_t *)(data->pixdata) + (x - data->image_start_x) + (y - data->image_start_y) * data->w);
+                    uint32_t rgb_pixel = (bgra_pixel & 0x000000FF) << 16 | (bgra_pixel & 0x0000FF00) | (bgra_pixel & 0x00FF0000) >> 16 | (bgra_pixel & 0xFF000000);
+                    *((uint32_t *)(vaddr) + x + y * OVERLAY_WIDTH) = rgb_pixel;
                 }
                 else{
                     *((uint32_t *)(vaddr) + x + y * OVERLAY_WIDTH) = data->background_color;
@@ -329,8 +337,8 @@ void overlay_transition_swipe(overlay_t* overlay,void (*middle_cb)(void *userdat
     swipe_worker_data.image_start_x = UI_WIDTH / 2 - w / 2;
     swipe_worker_data.image_start_y = UI_HEIGHT / 2 - h / 2;
     swipe_worker_data.curr_frame = 0;
-    swipe_worker_data.total_frames = 3 * params->duration / LAYER_ANIMATION_STEP_TIME;
-    swipe_worker_data.frame_step_y = OVERLAY_HEIGHT / (params->duration / LAYER_ANIMATION_STEP_TIME);
+    swipe_worker_data.total_frames = 3 * params->duration / OVERLAY_ANIMATION_STEP_TIME;
+    swipe_worker_data.frame_step_y = OVERLAY_HEIGHT / (params->duration / OVERLAY_ANIMATION_STEP_TIME);
     swipe_worker_data.background_color = params->background_color;
     swipe_worker_data.middle_cb = middle_cb;
     swipe_worker_data.userdata = userdata;
@@ -342,7 +350,7 @@ void overlay_transition_swipe(overlay_t* overlay,void (*middle_cb)(void *userdat
     prts_timer_create(
         &swipe_worker_data.timer_handle,
         params->duration,
-        LAYER_ANIMATION_STEP_TIME,
+        OVERLAY_ANIMATION_STEP_TIME,
         -1,
         swipe_timer_cb,
         &swipe_worker_data

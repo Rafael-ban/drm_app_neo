@@ -82,3 +82,9 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/libcedarx/external/include/adeco
 [100%] Built target mediaplayerd
 ```
 至此编译环境搭建完毕，可以使用此环境进行进一步开发
+
+## 直接嵌入的开源代码
+
+* [stb](https://github.com/nothings/stb) single-file public domain libraries for C/C++
+* [code128](https://github.com/fhunleth/code128) barcode generator
+* [lvgl](https://github.com/lvgl/lvgl) Embedded graphics library to create beautiful UIs for any MCU, MPU and display type.

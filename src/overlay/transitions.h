@@ -8,7 +8,7 @@ typedef struct {
     int duration;
 
     // fade,move,swipe
-    char* image_path;
+    char image_path[128];
     uint32_t background_color;
 } oltr_params_t;
 

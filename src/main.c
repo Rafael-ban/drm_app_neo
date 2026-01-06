@@ -11,10 +11,12 @@
 #include "render/lvgl_drm_warp.h"
 #include "overlay/overlay.h"
 #include "overlay/transitions.h"
+#include "overlay/opinfo.h"
 #include "utils/timer.h"
 #include "render/layer_animation.h"
 #include "utils/settings.h"
 #include "utils/timer.h"
+#include "utils/cacheassets.h"
 
 /* global variables */
 drm_warpper_t g_drm_warpper;
@@ -24,6 +26,7 @@ prts_timer_t g_prts_timer;
 layer_animation_t g_layer_animation;
 settings_t g_settings;
 overlay_t g_overlay;
+cacheassets_t g_cacheassets;
 
 buffer_object_t g_video_buf;
 
@@ -37,6 +40,32 @@ void signal_handler(int sig)
 void mount_video_layer_callback(void *userdata,bool is_last){
     drm_warpper_mount_layer(&g_drm_warpper, DRM_WARPPER_LAYER_VIDEO, 0, 0, &g_video_buf);
     drm_warpper_set_layer_coord(&g_drm_warpper, DRM_WARPPER_LAYER_OVERLAY, 0,0);
+}
+
+#include "utils/stb_image.h"
+static void load_asset_arknights(char *image_path, uint8_t** addr,int* w,int* h){
+    int c;
+    uint8_t* pixdata = stbi_load(image_path, w, h, &c, 4);
+    if(!pixdata){
+        log_error("failed to load image: %s", image_path);
+        return;
+    }
+    *addr = malloc((*w) * (*h) * 4);
+    if(!*addr){
+        log_error("failed to malloc memory: %s", image_path);
+        stbi_image_free(pixdata);
+        pixdata = NULL;
+        return;
+    }
+    for(int y = 0; y < (*h); y++){
+        for(int x = 0; x < (*w); x++){
+            uint32_t bgra_pixel = *((uint32_t *)(pixdata) + x + y * (*w));
+            uint32_t rgb_pixel = (bgra_pixel & 0x000000FF) << 16 | (bgra_pixel & 0x0000FF00) | (bgra_pixel & 0x00FF0000) >> 16 | (bgra_pixel & 0xFF000000);
+            *((uint32_t *)(*addr) + x + y * (*w)) = rgb_pixel;
+        }
+    }
+    stbi_image_free(pixdata);
+    pixdata = NULL;
 }
 
 int main(int argc, char *argv[]){
@@ -99,6 +128,18 @@ int main(int argc, char *argv[]){
     mediaplayer_set_video(&g_mediaplayer, "/assets/MS/loop.mp4");
     mediaplayer_start(&g_mediaplayer);
 
+    // ============ 缓冲素材 初始化 ===============
+    // 没错，我就是要用video层的buffer来缓存素材
+    cacheassets_init(&g_cacheassets, g_video_buf.vaddr, CACHED_ASSETS_MAX_SIZE);
+    cacheassets_put_asset(&g_cacheassets, CACHE_ASSETS_AK_BAR, CACHED_ASSETS_ASSET_PATH_AK_BAR);
+    cacheassets_put_asset(&g_cacheassets, CACHE_ASSETS_BTM_LEFT_BAR, CACHED_ASSETS_ASSET_PATH_BTM_LEFT_BAR);
+    cacheassets_put_asset(&g_cacheassets, CACHE_ASSETS_TOP_LEFT_RECT, CACHED_ASSETS_ASSET_PATH_TOP_LEFT_RECT);
+    cacheassets_put_asset(&g_cacheassets, CACHE_ASSETS_TOP_LEFT_RHODES, CACHED_ASSETS_ASSET_PATH_TOP_LEFT_RHODES);
+    cacheassets_put_asset(&g_cacheassets, CACHE_ASSETS_TOP_RIGHT_BAR, CACHED_ASSETS_ASSET_PATH_TOP_RIGHT_BAR);
+    cacheassets_put_asset(&g_cacheassets, CACHE_ASSETS_TOP_RIGHT_ARROW, CACHED_ASSETS_ASSET_PATH_TOP_RIGHT_ARROW);
+
+    log_info("Cached assets: %d", g_cacheassets.curr_size);
+
     // ============ OVERLAY 初始化 ===============
     drm_warpper_init_layer(
         &g_drm_warpper, 
@@ -124,11 +165,31 @@ int main(int argc, char *argv[]){
 
     oltr_params_t fade_params;
     fade_params.duration = 500000;
-    fade_params.image_path = "/root/u_boot_logo.png";
-    fade_params.background_color = 0xFFFFFFFF;
-    // overlay_transition_fade(&g_overlay,mount_video_layer_callback,NULL,&fade_params);
+    strcpy(fade_params.image_path, "/root/u_boot_logo.png");
+    fade_params.background_color = 0xFF000000;
+    overlay_transition_fade(&g_overlay,mount_video_layer_callback,NULL,&fade_params);
     // overlay_transition_move(&g_overlay,mount_video_layer_callback,NULL,&fade_params);
-    overlay_transition_swipe(&g_overlay,mount_video_layer_callback,NULL,&fade_params);
+    // overlay_transition_swipe(&g_overlay,mount_video_layer_callback,NULL,&fade_params);
+
+
+    usleep(3 * 1000 * 1000);
+
+    olopinfo_params_t opinfo_params;
+    opinfo_params.fade_duration = 500000;
+    opinfo_params.color = 0x00ff0000;
+    strcpy(opinfo_params.operator_name, "SHIROGANE");
+    strcpy(opinfo_params.operator_code, "SR-GN");
+    strcpy(opinfo_params.barcode_text, "SHIROGANE-SRGN123");
+    strcpy(opinfo_params.staff_text, "Staff");
+    strcpy(opinfo_params.aux_text, "Operator of Rhodes Island\nSUPPORTER/Rhodes Island\n我能吞下玻璃而不伤身体疼疼疼疼疼疼疼疼疼疼疼疼疼疼疼疼疼疼疼疼疼疼疼疼疼疼疼疼疼疼疼疼疼疼疼");
+    load_asset_arknights("/root/ak_logo.png", &opinfo_params.logo_addr, &opinfo_params.logo_w, &opinfo_params.logo_h);
+    load_asset_arknights("/root/sniper.png", &opinfo_params.class_addr, &opinfo_params.class_w, &opinfo_params.class_h);
+    overlay_opinfo_show_arknights(&g_overlay, &opinfo_params);
+
+    usleep(3 * 1000 * 1000);
+
+    // overlay_opinfo_stop(&g_overlay);
+
     // ============ 主循环 ===============
     // does nothing, stuck here until signal is received
     while(g_running){

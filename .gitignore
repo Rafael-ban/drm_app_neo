@@ -5,5 +5,8 @@ build/
 # 这样之后还能回到eez studio里面编辑UI。
 src/ui/*
 !src/ui/actions.c
+!src/ui/filemanager.c
+!src/ui/filemanager.h
+
 
 .cache

@@ -27,6 +27,8 @@ pkg_check_modules(LIBEVDEV REQUIRED libevdev)
 pkg_check_modules(LIBDRM REQUIRED libdrm)
 
 set(LV_BUILD_CONF_PATH ${CMAKE_SOURCE_DIR}/src/lv_conf.h)
+set(CONFIG_LV_BUILD_EXAMPLES 0)
+set(CONFIG_LV_BUILD_DEMOS 0)
 add_subdirectory(lvgl)
 
 

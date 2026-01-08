@@ -14,6 +14,7 @@
 #include "utils/storage.h"
 #include "utils/sysinfo.h"
 #include "utils/timer.h"
+#include "ui/filemanager.h"
 
 extern settings_t g_settings;
 
@@ -398,6 +399,10 @@ void action_screen_loaded_cb(lv_event_t * e){
 
     if(g_cur_scr == curr_screen_t_SCREEN_SETTINGS){
         load_ctrl_word();
+    }
+
+    if(g_cur_scr == curr_screen_t_SCREEN_FILEMANAGER){
+        add_filemanager_to_group();
     }
     return;
 };

@@ -12,6 +12,7 @@
 #include "ui/ui.h"
 #include "ui/vars.h"
 #include "driver/key_enc_evdev.h"
+#include "ui/filemanager.h"
 
 static uint32_t lvgl_drm_warp_tick_get_cb(void)
 {
@@ -30,7 +31,6 @@ static void lvgl_drm_warp_flush_cb(lv_display_t * disp, const lv_area_t * area, 
     }
     lvgl_drm_warp_t *lvgl_drm_warp = (lvgl_drm_warp_t *)lv_display_get_driver_data(disp);
 
-    
 
     // log_info("enqueue display item");
 
@@ -128,6 +128,7 @@ void lvgl_drm_warp_init(lvgl_drm_warp_t *lvgl_drm_warp,drm_warpper_t *drm_warppe
     ui_init();
     loadScreen(SCREEN_ID_SPINNER);
     
+    create_filemanager();
 
     lvgl_drm_warp->running = 1;
     pthread_create(&lvgl_drm_warp->lvgl_thread, NULL, lvgl_drm_warp_thread_entry, lvgl_drm_warp);

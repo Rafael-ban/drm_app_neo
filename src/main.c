@@ -87,11 +87,11 @@ int main(int argc, char *argv[]){
 
     printf("EPASS_NEO_GIT_VERSION: %s\n", EPASS_GIT_VERSION);
     printf("COMPILE_TIME: %s\n", COMPILE_TIME);
-    puts(APP_BARNER);
 
+    fputs(APP_BARNER, stderr);
     log_info("==========> Starting EPass DRM APP!");
 
-    usleep(500000);
+    usleep(3000000);
 
     if(drm_warpper_init(&g_drm_warpper) != 0){
         log_error("failed to initialize DRM warpper");

@@ -52,7 +52,7 @@ static void settings_save(settings_t *settings){
     FILE *f = fopen(SETTINGS_FILE_PATH, "wb");
     settings->magic = SETTINGS_MAGIC;
     settings->version = SETTINGS_VERSION;
-    fwrite(settings, sizeof(settings_t), 1, f);
+    fwrite(settings, SETTINGS_LENGTH, 1, f);
     fclose(f);
 
     log_info("setting saved!");
@@ -65,7 +65,7 @@ void settings_init(settings_t *settings){
         log_error("failed to open settings file");
     }
     else{
-        fread(settings, sizeof(settings_t), 1, f);
+        fread(settings, SETTINGS_LENGTH, 1, f);
         if(settings->magic != SETTINGS_MAGIC){
             log_error("invalid settings file");
         }
@@ -77,6 +77,7 @@ void settings_init(settings_t *settings){
             set_brightness(settings->brightness);
             settings_set_usb_mode(settings->usb_mode);
             log_settings(settings);
+            pthread_mutex_init(&settings->mtx, NULL);
             return;
         }
         fclose(f);
@@ -93,11 +94,22 @@ void settings_init(settings_t *settings){
     settings->ctrl_word.no_intro_block = 0;
     settings->ctrl_word.no_overlay_block = 0;
     settings_set_usb_mode(settings->usb_mode);
+    pthread_mutex_init(&settings->mtx, NULL);
     settings_save(settings);
     return;
     
 }
 
+void settings_destroy(settings_t *settings){
+    pthread_mutex_destroy(&settings->mtx);
+}
+
+void settings_lock(settings_t *settings){
+    pthread_mutex_lock(&settings->mtx);
+}
+void settings_unlock(settings_t *settings){
+    pthread_mutex_unlock(&settings->mtx);
+}
 
 void settings_update(settings_t *settings){
     settings_save(settings);

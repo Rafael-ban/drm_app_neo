@@ -6,6 +6,8 @@ typedef enum {
     UI_WARNING_LOW_BATTERY = 1, // 电池电量严重不足
     UI_WARNING_ASSET_ERROR = 2, // 部分干员加载失败
     UI_WARNING_SD_MOUNT_ERROR = 3, // SD卡挂载失败
+    UI_WARNING_PRTS_CONFLICT = 4, // PRTS冲突
+    UI_WARNING_NO_ASSETS = 5, // 没有干员素材
 } warning_type_t;
 
 

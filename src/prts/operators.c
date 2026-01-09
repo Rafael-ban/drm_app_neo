@@ -142,6 +142,7 @@ static void validate_optional_image_path(
 
     if (w <= 0 || h <= 0 || w > OVERLAY_WIDTH || h > OVERLAY_HEIGHT) {
         // 按规则：不满足则视为图片不存在
+        prts_log_parse_log(prts, (char*)op_dir, (char*)field_for_log, PARSE_LOG_WARN);
         return;
     }
 
@@ -465,12 +466,6 @@ int prts_operator_try_load(prts_t *prts,prts_operator_entry_t* operator,char * p
                 return -1;
             }
             operator->opinfo_params.appear_time = appear_time;
-            operator->opinfo_params.fade_duration = json_get_int(opt, "fade_duration", 0);
-            if (operator->opinfo_params.fade_duration <= 0) {
-                prts_log_parse_log(prts, path, "overlay.options.fade_duration<=0", PARSE_LOG_ERROR);
-                cJSON_Delete(json);
-                return -1;
-            }
 
             const char *opn = json_get_string(opt, "operator_name");
             const char *opc = json_get_string(opt, "operator_code");
@@ -507,9 +502,9 @@ int prts_operator_try_load(prts_t *prts,prts_operator_entry_t* operator,char * p
                 return -1;
             }
             operator->opinfo_params.appear_time = appear_time;
-            operator->opinfo_params.fade_duration = json_get_int(opt, "fade_duration", 0);
-            if (operator->opinfo_params.fade_duration <= 0) {
-                prts_log_parse_log(prts, path, "overlay.options.fade_duration<=0", PARSE_LOG_ERROR);
+            operator->opinfo_params.duration = json_get_int(opt, "duration", 0);
+            if (operator->opinfo_params.duration <= 0) {
+                prts_log_parse_log(prts, path, "overlay.options.duration<=0", PARSE_LOG_ERROR);
                 cJSON_Delete(json);
                 return -1;
             }
@@ -576,7 +571,7 @@ void prts_operator_log_entry(prts_operator_entry_t* operator){
     log_debug("loop_video.path: %s", operator->loop_video.path);
     log_debug("opinfo_params.type: %d", operator->opinfo_params.type);
     log_debug("opinfo_params.appear_time: %d", operator->opinfo_params.appear_time);
-    log_debug("opinfo_params.fade_duration: %d", operator->opinfo_params.fade_duration);
+    log_debug("opinfo_params.duration: %d", operator->opinfo_params.duration);
     log_debug("opinfo_params.operator_name: %s", operator->opinfo_params.operator_name);
     log_debug("opinfo_params.operator_code: %s", operator->opinfo_params.operator_code);
     log_debug("opinfo_params.barcode_text: %s", operator->opinfo_params.barcode_text);

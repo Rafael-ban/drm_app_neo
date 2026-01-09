@@ -22,6 +22,10 @@ inline static const char *get_warning_title(warning_type_t type){
             return "部分干员加载失败";
         case UI_WARNING_SD_MOUNT_ERROR:
             return "SD卡挂载失败";
+        case UI_WARNING_PRTS_CONFLICT:
+            return "PRTS冲突";
+        case UI_WARNING_NO_ASSETS:
+            return "没有干员素材";
         default:
             return "未知错误";
     }
@@ -35,6 +39,10 @@ inline static const char *get_warning_desc(warning_type_t type){
             return "请根据" PRTS_OPERATOR_PARSE_LOG "排查干员素材格式问题";
         case UI_WARNING_SD_MOUNT_ERROR:
             return "请检查SD卡格式为FAT32，或进行格式化。";
+        case UI_WARNING_PRTS_CONFLICT:
+            return "正在切换干员，请稍候重试。";
+        case UI_WARNING_NO_ASSETS:
+            return "请向您的通行认证终端下装干员素材。";
         default:
             return "为什么你能看到这个告警页面？";
     }
@@ -57,8 +65,10 @@ static void ui_warning_timer_cb(lv_timer_t * timer){
 }
 
 void ui_warning_init(){
+    log_info("==> UI Warning Initializing...");
     spsc_bq_init(&g_warning_queue, 10);
     g_warning_timer = lv_timer_create(ui_warning_timer_cb, UI_WARNING_TIMER_TICK_PERIOD / 1000, NULL);
+    log_info("==> UI Warning Initialized!");
 }
 void ui_warning_destroy(){
     spsc_bq_destroy(&g_warning_queue);

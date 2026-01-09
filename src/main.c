@@ -79,8 +79,6 @@ int main(int argc, char *argv[]){
     // ============ PRTS 计时器 初始化 ===============
     prts_timer_init(&g_prts_timer);
 
-    // ============ PRTS 初始化===============
-    prts_init(&g_prts);
 
     // ============ 设置 初始化 ===============
     settings_init(&g_settings);
@@ -109,8 +107,8 @@ int main(int argc, char *argv[]){
         return -1;
     }
 
-    mediaplayer_set_video(&g_mediaplayer, "/assets/MS/loop.mp4");
-    mediaplayer_start(&g_mediaplayer);
+    // mediaplayer_set_video(&g_mediaplayer, "/assets/MS/loop.mp4");
+    // mediaplayer_start(&g_mediaplayer);
 
     // ============ 缓冲素材 初始化 ===============
     // 没错，我就是要用video层的buffer来缓存素材
@@ -146,57 +144,16 @@ int main(int argc, char *argv[]){
     lvgl_drm_warp_init(&g_lvgl_drm_warp, &g_drm_warpper,&g_layer_animation);
     drm_warpper_set_layer_coord(&g_drm_warpper, DRM_WARPPER_LAYER_UI, 0, SCREEN_HEIGHT);
 
+    // ============ PRTS 初始化===============
+    prts_init(&g_prts, &g_overlay);
 
-    oltr_params_t fade_params;
-    fade_params.duration = 500000;
-    strcpy(fade_params.image_path, "/root/u_boot_logo.png");
-    fade_params.background_color = 0xFF000000;
-    overlay_transition_load_image(&fade_params);
-    // overlay_transition_fade(&g_overlay,mount_video_layer_callback,NULL,&fade_params);
-    // overlay_transition_move(&g_overlay,mount_video_layer_callback,NULL,&fade_params);
-    overlay_transition_swipe(&g_overlay,mount_video_layer_callback,NULL,&fade_params);
-
-
-    usleep(3 * 1000 * 1000);
-
-    olopinfo_params_t opinfo_params;
-    opinfo_params.type = OPINFO_TYPE_ARKNIGHTS;
-    opinfo_params.fade_duration = 500000;
-    opinfo_params.color = 0x00ff0000;
-    strcpy(opinfo_params.operator_name, "SHIROGANE");
-    strcpy(opinfo_params.operator_code, "SR-GN");
-    strcpy(opinfo_params.barcode_text, "SHIROGANE-SRGN123");
-    strcpy(opinfo_params.staff_text, "Staff");
-    strcpy(opinfo_params.aux_text, "Operator of Rhodes Island\nSUPPORTER/Rhodes Island\n我能吞下玻璃而不伤身体疼疼疼疼疼疼疼疼疼疼疼疼疼疼疼疼疼疼疼疼疼疼疼疼疼疼疼疼疼疼疼疼疼疼疼");
-    strcpy(opinfo_params.class_path, "/root/sniper.png");
-    strcpy(opinfo_params.logo_path, "/root/ak_logo.png");
-    overlay_opinfo_load_image(&opinfo_params);
-    overlay_opinfo_show_arknights(&g_overlay, &opinfo_params);
-
-    ui_warning(UI_WARNING_LOW_BATTERY);
-    ui_warning(UI_WARNING_ASSET_ERROR);
-    ui_warning(UI_WARNING_SD_MOUNT_ERROR);
-    ui_warning(UI_WARNING_LOW_BATTERY);
-    ui_warning(UI_WARNING_ASSET_ERROR);
-    ui_warning(UI_WARNING_SD_MOUNT_ERROR);
-    ui_warning(UI_WARNING_LOW_BATTERY);
-    ui_warning(UI_WARNING_ASSET_ERROR);
-    ui_warning(UI_WARNING_SD_MOUNT_ERROR);
-
-    usleep(5 * 1000 * 1000);
     
-
-
-    overlay_opinfo_stop(&g_overlay);
 
     // ============ 主循环 ===============
     // does nothing, stuck here until signal is received
     while(g_running){
         usleep(1 * 1000 * 1000);
     }
-
-    overlay_opinfo_free_image(&opinfo_params);
-    overlay_transition_free_image(&fade_params);
 
     /* cleanup */
     log_info("==> Shutting down EPass DRM APP!");
@@ -206,5 +163,6 @@ int main(int argc, char *argv[]){
     mediaplayer_stop(&g_mediaplayer);
     mediaplayer_destroy(&g_mediaplayer);
     drm_warpper_destroy(&g_drm_warpper);
+    settings_destroy(&g_settings);
     return g_exitcode;
 }

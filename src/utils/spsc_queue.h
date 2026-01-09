@@ -1,6 +1,15 @@
 #ifndef SPSC_QUEUE_H
 #define SPSC_QUEUE_H
 
+/* 
+ * SPSC_BQ 单生产者单消费者堵塞队列。
+ * 其实在“线程安全”意义上并不只限 SPSC：因为所有对 head/tail/count/buf/closed 的访问都被同一把 mtx 串行化了，
+ * 从互斥角度讲可以支持 MPSC，甚至 MPMC（多生产者多消费者）也不会产生数据竞争。
+ *
+ * 但是：destroy 的并发语义是不安全的。
+ */
+
+
 #include <pthread.h>
 #include <stddef.h> // size_t
 

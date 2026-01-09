@@ -64,7 +64,7 @@ void overlay_opinfo_show_image(overlay_t* overlay,olopinfo_params_t* params){
         DRM_WARPPER_LAYER_OVERLAY, 
         0, OVERLAY_HEIGHT,
         0, 0,
-        params->fade_duration, 0
+        params->duration, 0
     );
 }
 
@@ -142,9 +142,9 @@ static void draw_color_fade(uint32_t* vaddr,int radius,uint32_t color){
                 break;
             }
             uint8_t alpha = 255 - ((x+y)*255 / radius);
-            int real_x = OVERLAY_WIDTH - x;
-            int real_y = OVERLAY_HEIGHT - y;
-            *((uint32_t *)(vaddr) + real_x + real_y * OVERLAY_WIDTH) = color | (alpha << 24);
+            int real_x = OVERLAY_WIDTH - x - 1;
+            int real_y = OVERLAY_HEIGHT - y - 1;
+            *((uint32_t *)(vaddr) + real_x + real_y * OVERLAY_WIDTH) = (color & 0x00FFFFFF) | (alpha << 24);
 
         }
     }
@@ -282,6 +282,15 @@ static void arknights_overlay_worker(void *userdata,int skipped_frames){
     //     data->buf1_update.barcode,
     //     data->buf1_update.class_icon,
     //     data->buf1_update.fade_color,data->buf1_update.logo_fade);
+
+    // log_trace("logo addr: %p", data->params->logo_addr);
+    // log_trace("logo w: %d", data->params->logo_w);
+    // log_trace("logo h: %d", data->params->logo_h);
+    // log_trace("class addr: %p", data->params->class_addr);
+    // log_trace("class w: %d", data->params->class_w);
+    // log_trace("class h: %d", data->params->class_h);
+
+    // log_trace("fade color radius:%d",data->color_fade_value);
 
     // =========== 绘制 ================
 
@@ -447,12 +456,11 @@ static void arknights_overlay_worker(void *userdata,int skipped_frames){
 
     // == color fade start
     if(update->fade_color){
-        draw_color_fade(fbdst.vaddr, data->color_fade_value, params->color);
+        draw_color_fade(vaddr, data->color_fade_value, params->color);
         update->fade_color = 0;
     }
 
-    // == logo swipe start
-
+    // == logo fade start
     if(update->logo_fade){
         fbsrc.vaddr = (uint32_t*)params->logo_addr;
         fbsrc.width = params->logo_w;
@@ -650,6 +658,8 @@ void overlay_opinfo_show_arknights(overlay_t* overlay,olopinfo_params_t* params)
     drm_warpper_queue_item_t* item;
     uint32_t* vaddr;
 
+    log_info("overlay_opinfo_show_arknights");
+
     drm_warpper_set_layer_alpha(overlay->drm_warpper, DRM_WARPPER_LAYER_OVERLAY, 255);
     drm_warpper_set_layer_coord(overlay->drm_warpper, DRM_WARPPER_LAYER_OVERLAY, 0, OVERLAY_HEIGHT);
 
@@ -717,7 +727,7 @@ void overlay_opinfo_show_arknights(overlay_t* overlay,olopinfo_params_t* params)
         DRM_WARPPER_LAYER_OVERLAY, 
         0, OVERLAY_HEIGHT,
         0, 0,
-        params->fade_duration, 0
+        1 * 1000 * 1000, 0
     );
 }
 
@@ -728,10 +738,13 @@ void overlay_opinfo_load_image(olopinfo_params_t* params){
     }
     if(params->type == OPINFO_TYPE_IMAGE){
         load_img_assets(params->image_path, &params->image_addr, &params->image_w, &params->image_h);
+        log_debug("loaded image: %s, w: %d, h: %d", params->image_path, params->image_w, params->image_h);
     }
     else if(params->type == OPINFO_TYPE_ARKNIGHTS){
         load_img_assets(params->class_path, &params->class_addr, &params->class_w, &params->class_h);
         load_img_assets(params->logo_path, &params->logo_addr, &params->logo_w, &params->logo_h);
+        log_debug("loaded class: %s, w: %d, h: %d", params->class_path, params->class_w, params->class_h);
+        log_debug("loaded logo: %s, w: %d, h: %d", params->logo_path, params->logo_w, params->logo_h);
     }
 }
 
@@ -743,16 +756,19 @@ void overlay_opinfo_free_image(olopinfo_params_t* params){
         if(params->image_addr){
             free(params->image_addr);
             params->image_addr = NULL;
+            log_debug("freed image: %s", params->image_path);
         }
     }
     else if(params->type == OPINFO_TYPE_ARKNIGHTS){
         if(params->class_addr){
             free(params->class_addr);
             params->class_addr = NULL;
+            log_debug("freed class: %s", params->class_path);
         }
         if(params->logo_addr){
             free(params->logo_addr);
             params->logo_addr = NULL;
+            log_debug("freed logo: %s", params->logo_path);
         }
     }
 }

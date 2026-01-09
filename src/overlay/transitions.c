@@ -400,11 +400,13 @@ void overlay_transition_load_image(oltr_params_t* params){
         return;
     }
     load_img_assets(params->image_path, &params->image_addr, &params->image_w, &params->image_h);
+    log_debug("(transition) loaded image: %s, w: %d, h: %d", params->image_path, params->image_w, params->image_h);
 }
 
 void overlay_transition_free_image(oltr_params_t* params){
     if(params->image_addr){
         free(params->image_addr);
         params->image_addr = NULL;
+        log_debug("(transition) freed image: %s", params->image_path);
     }
 }

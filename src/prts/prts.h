@@ -4,7 +4,11 @@
 #include "utils/uuid.h"
 #include "overlay/opinfo.h"
 #include "overlay/transitions.h"
+#include <overlay/overlay.h>
 #include <stdio.h>
+#include <utils/settings.h>
+#include "utils/spsc_queue.h"
+#include "vars.h"
 
 typedef enum {
     PARSE_LOG_ERROR = 0,
@@ -41,16 +45,40 @@ typedef struct {
 
 } prts_operator_entry_t;
 
+
+
+typedef enum {
+    PRTS_REQUEST_NONE = 0,
+    // 请求切换到指定干员
+    PRTS_REQUEST_SET_OPERATOR,
+} prts_request_type_t;
+
+
 typedef struct {
+    prts_request_type_t type;
+    int operator_index;
+} prts_request_t;
+
+typedef struct {
+    overlay_t * overlay;
+
+    // 是否正在处理干员切换
+    bool is_busy;
+
     prts_operator_entry_t operators[PRTS_OPERATORS_MAX];
     int operator_count;
+    int operator_index;
 
     FILE* parse_log_f;
 
+    // 上次发生干员切换的时机
+    uint64_t last_switch_time;
     prts_timer_handle_t timer_handle;
+
+    spsc_bq_t req_queue;
 } prts_t;
 
-void prts_init(prts_t* prts);
+void prts_init(prts_t* prts,overlay_t* overlay);
 void prts_destroy(prts_t* prts);
 
 void prts_log_parse_log(prts_t* prts,char* path,char* message,prts_parse_log_type_t type);

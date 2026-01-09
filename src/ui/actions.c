@@ -15,7 +15,6 @@
 #include "utils/timer.h"
 #include "ui/filemanager.h"
 
-extern settings_t g_settings;
 
 
 void action_op_sel_cb(lv_event_t * e){

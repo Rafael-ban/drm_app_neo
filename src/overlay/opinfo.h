@@ -12,10 +12,10 @@ typedef struct {
     opinfo_type_t type;
 
     // 通用参数
-    int fade_duration;
     int appear_time;
 
     // image 图像类型
+    int duration; // 图像进入时的动画时长
     char image_path[128];
     int image_w;
     int image_h;

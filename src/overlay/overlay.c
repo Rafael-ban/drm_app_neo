@@ -162,6 +162,14 @@ int overlay_destroy(overlay_t* overlay){
 // 现在我们还是用轮询的方式来做的。
 // 如果卡住prts太久，导致那边定时器被双重触发，就需要想个办法处理一下。
 void overlay_abort(overlay_t* overlay){
+    layer_animation_ease_in_out_move(
+        overlay->layer_animation, 
+        DRM_WARPPER_LAYER_OVERLAY,
+        0, 0, 
+        0, OVERLAY_HEIGHT, 
+        UI_LAYER_ANIMATION_DURATION, 0
+    );
+
     overlay->request_abort = 1;
     while(overlay->overlay_timer_handle){
         usleep(50 * 1000);

@@ -17,7 +17,7 @@
 
 #define APP_ABOUT_MSG \
     "基于f1c200s的明日方舟电子通行认证终端\n" \
-    "白银今天下班了吗<inapp@iccmc.cc> 2026\n" \
+    "白银+ChatGPT 5.2<inapp@iccmc.cc> 2026\n" \
     "https://github.com/rhodesepass\n" \
     "电子通行证是我个人业余时间做的一款开源的自由硬件，" \
     "与鹰角网络没有任何直接或间接的关联。相关游戏素材版权属于鹰角网络。\n"\
@@ -33,6 +33,10 @@
 #define PRTS_OPERATORS_MAX 128
 #define PRTS_TIMER_MAX 1024
 #define PRTS_OPERATOR_PARSE_LOG "/root/asset.log"
+#define PRTS_ASSET_VERSION_NUMBER 1
+#define PRTS_DEFAULT_ICON_PATH "A:/root/res/defaulticon.png"
+#define PRTS_ASSET_DIR "/assets/"
+
 
 // ========== Screen Configuration ==========
 #define USE_360_640_SCREEN

@@ -727,6 +727,9 @@ void overlay_opinfo_stop(overlay_t* overlay){
 
 
 void overlay_opinfo_load_image(olopinfo_params_t* params){
+    if(params->type == OPINFO_TYPE_NONE){
+        return;
+    }
     if(params->type == OPINFO_TYPE_IMAGE){
         load_img_assets(params->image_path, &params->image_addr, &params->image_w, &params->image_h);
     }
@@ -737,6 +740,9 @@ void overlay_opinfo_load_image(olopinfo_params_t* params){
 }
 
 void overlay_opinfo_free_image(olopinfo_params_t* params){
+    if(params->type == OPINFO_TYPE_NONE){
+        return;
+    }
     if(params->type == OPINFO_TYPE_IMAGE){
         if(params->image_addr){
             free(params->image_addr);

@@ -377,6 +377,9 @@ void overlay_transition_swipe(overlay_t* overlay,void (*middle_cb)(void *userdat
 }
 
 void overlay_transition_load_image(oltr_params_t* params){
+    if(params->type == TRANSITION_TYPE_NONE){
+        return;
+    }
     load_img_assets(params->image_path, &params->image_addr, &params->image_w, &params->image_h);
 }
 

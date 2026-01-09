@@ -2,10 +2,17 @@
 #include "overlay/overlay.h"
 
 
+typedef enum {
+    TRANSITION_TYPE_FADE,
+    TRANSITION_TYPE_MOVE,
+    TRANSITION_TYPE_SWIPE,
+    TRANSITION_TYPE_NONE,
+} transition_type_t;
 
 typedef struct {
     // shared by all transitions
     int duration;
+    transition_type_t type;
 
     // fade,move,swipe
     char image_path[128];

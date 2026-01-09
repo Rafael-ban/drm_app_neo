@@ -88,3 +88,4 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/libcedarx/external/include/adeco
 * [stb](https://github.com/nothings/stb) single-file public domain libraries for C/C++
 * [code128](https://github.com/fhunleth/code128) barcode generator
 * [lvgl](https://github.com/lvgl/lvgl) Embedded graphics library to create beautiful UIs for any MCU, MPU and display type.
+* [cJSON](https://github.com/DaveGamble/cJSON) Ultralightweight JSON parser in ANSI C

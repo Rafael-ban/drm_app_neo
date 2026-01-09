@@ -38,6 +38,7 @@ add_executable(epass_drm_app
   src/main.c
 
   src/prts/prts.c
+  src/prts/operators.c
 
   src/driver/drm_warpper.c
   src/driver/key_enc_evdev.c
@@ -68,6 +69,8 @@ add_executable(epass_drm_app
   src/utils/settings.c
   src/utils/cacheassets.c
   src/utils/code128.c
+  src/utils/cJSON.c
+  src/utils/uuid.c
 )
 
 target_include_directories(epass_drm_app PRIVATE

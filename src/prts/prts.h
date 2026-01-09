@@ -4,6 +4,12 @@
 #include "utils/uuid.h"
 #include "overlay/opinfo.h"
 #include "overlay/transitions.h"
+#include <stdio.h>
+
+typedef enum {
+    PARSE_LOG_ERROR = 0,
+    PARSE_LOG_WARN = 1,
+} prts_parse_log_type_t;
 
 typedef enum {
     DISPLAY_360_640 = 0,
@@ -30,15 +36,21 @@ typedef struct {
     prts_video_t loop_video;
 
     olopinfo_params_t opinfo_params;
-    oltr_params_t transition_params;
+    oltr_params_t transition_in;
+    oltr_params_t transition_loop;
 
 } prts_operator_entry_t;
 
 typedef struct {
-    int exitcode;
+    prts_operator_entry_t operators[PRTS_OPERATORS_MAX];
+    int operator_count;
+
+    FILE* parse_log_f;
+
+    prts_timer_handle_t timer_handle;
 } prts_t;
 
-prts_t g_prts;
+void prts_init(prts_t* prts);
+void prts_destroy(prts_t* prts);
 
-void prts_init();
-void prts_destroy();
+void prts_log_parse_log(prts_t* prts,char* path,char* message,prts_parse_log_type_t type);

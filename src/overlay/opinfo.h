@@ -5,6 +5,7 @@
 typedef enum {
     OPINFO_TYPE_IMAGE,
     OPINFO_TYPE_ARKNIGHTS,
+    OPINFO_TYPE_NONE,
 } opinfo_type_t;
 
 typedef struct {
@@ -12,6 +13,7 @@ typedef struct {
 
     // 通用参数
     int fade_duration;
+    int appear_time;
 
     // image 图像类型
     char image_path[128];

@@ -18,6 +18,7 @@
 #include "utils/timer.h"
 #include "utils/cacheassets.h"
 #include "ui/actions_warning.h"
+#include "prts/prts.h"
 
 /* global variables */
 drm_warpper_t g_drm_warpper;
@@ -28,6 +29,7 @@ layer_animation_t g_layer_animation;
 settings_t g_settings;
 overlay_t g_overlay;
 cacheassets_t g_cacheassets;
+prts_t g_prts;
 
 buffer_object_t g_video_buf;
 
@@ -74,8 +76,11 @@ int main(int argc, char *argv[]){
         return -1;
     }
 
-    // ============ PRTS 定时器初始化 ===============
+    // ============ PRTS 计时器 初始化 ===============
     prts_timer_init(&g_prts_timer);
+
+    // ============ PRTS 初始化===============
+    prts_init(&g_prts);
 
     // ============ 设置 初始化 ===============
     settings_init(&g_settings);

@@ -62,6 +62,8 @@ void prts_init(prts_t* prts){
         prts_operator_log_entry(&prts->operators[i]);
     }
 
+    log_info("==> PRTS Initalized!");
+
 }
 void prts_destroy(prts_t* prts){
     if(prts->parse_log_f != NULL){

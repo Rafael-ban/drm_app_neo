@@ -60,7 +60,7 @@ uint64_t get_us(void){
 void* overlay_worker_thread(void* arg){
     overlay_t* overlay = (overlay_t*)arg;
     overlay_worker_t* worker = &overlay->worker;
-    log_info("==============> Overlay Worker Thread Started!");
+    log_info("==> Overlay Worker Thread Started!");
     while(worker->running){
         pthread_mutex_lock(&worker->mutex);
 
@@ -89,7 +89,7 @@ void* overlay_worker_thread(void* arg){
     }
 
 worker_end:
-    log_info("==============> Overlay Worker Thread Ended!");
+    log_info("==> Overlay Worker Thread Ended!");
     return NULL;
 }
 
@@ -143,6 +143,7 @@ int overlay_init(overlay_t* overlay,drm_warpper_t* drm_warpper,layer_animation_t
     overlay->worker.running = 1;
     pthread_create(&overlay->worker.thread, NULL, overlay_worker_thread, overlay);
 
+    log_info("==> Overlay Initalized!");
     return 0;
 }
 

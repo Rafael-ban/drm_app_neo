@@ -14,6 +14,7 @@ void cacheassets_init(cacheassets_t* cacheassets,uint8_t* base_addr,int max_size
     for(int i = 0; i < CACHE_ASSETS_MAX_ASSET_MAX; i++){
         cacheassets->asset_addr[i] = NULL;
     }
+    log_info("==> Cacheassets Initalized!");
 }
 
 void cacheassets_put_asset(cacheassets_t* cacheassets,cacheasset_asset_id_t asset_id,char* image_path){

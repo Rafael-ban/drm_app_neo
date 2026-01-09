@@ -4,16 +4,16 @@
 #include <stdlib.h>
 
 static void log_settings(settings_t *settings){
-    log_info("==========> Settings Log <==========");
+    log_info("==> Settings Log <==");
     log_info("magic: %08lx", settings->magic);
     log_info("version: %d", settings->version);
     log_info("brightness: %d", settings->brightness);
     log_info("switch_interval: %d", settings->switch_interval);
     log_info("switch_mode: %d", settings->switch_mode);
     log_info("usb_mode: %d", settings->usb_mode);
-    log_info("ctrl_word.lowbat_trip: %d", settings->ctrl_word.lowbat_trip);
-    log_info("ctrl_word.no_intro_block: %d", settings->ctrl_word.no_intro_block);
-    log_info("ctrl_word.no_overlay_block: %d", settings->ctrl_word.no_overlay_block);
+    log_info("ctrl.lowbat: %d", settings->ctrl_word.lowbat_trip);
+    log_info("ctrl.no_intro: %d", settings->ctrl_word.no_intro_block);
+    log_info("ctrl.no_overlay: %d", settings->ctrl_word.no_overlay_block);
 }
 
 static void set_brightness(int brightness){

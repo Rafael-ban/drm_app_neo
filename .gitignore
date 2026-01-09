@@ -2,3 +2,4 @@ backup/
 build/
 
 .cache
+epconfig.json

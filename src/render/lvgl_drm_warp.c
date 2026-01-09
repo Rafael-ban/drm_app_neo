@@ -55,13 +55,13 @@ static void lvgl_drm_warp_flush_cb(lv_display_t * disp, const lv_area_t * area, 
 
 static void* lvgl_drm_warp_thread_entry(void *arg){
     lvgl_drm_warp_t *lvgl_drm_warp = (lvgl_drm_warp_t *)arg;
-    log_info("======> LVGL Thread Started!");
+    log_info("==> LVGL Thread Started!");
     while(lvgl_drm_warp->running){
         uint32_t idle_time = lv_timer_handler();
         ui_tick();
         usleep(idle_time * 1000);
     }
-    log_info("======> LVGL Thread Ended!");
+    log_info("==> LVGL Thread Ended!");
     return NULL; 
 }
 
@@ -133,6 +133,7 @@ void lvgl_drm_warp_init(lvgl_drm_warp_t *lvgl_drm_warp,drm_warpper_t *drm_warppe
 
     lvgl_drm_warp->running = 1;
     pthread_create(&lvgl_drm_warp->lvgl_thread, NULL, lvgl_drm_warp_thread_entry, lvgl_drm_warp);
+    log_info("==> LVGL warpper Initalized!");
 }
 
 void lvgl_drm_warp_destroy(lvgl_drm_warp_t *lvgl_drm_warp){

@@ -111,7 +111,7 @@ int prts_timer_init(prts_timer_t *tm)
     tm->inited = true;
     g_prts_tm_singleton = tm;
     pthread_mutex_unlock(&tm->mtx);
-    log_info("==============> PRTS Timer Initialized!");
+    log_info("==> PRTS Timer Initialized!");
     return 0;
 }
 

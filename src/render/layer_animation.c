@@ -8,7 +8,7 @@
 
 int layer_animation_init(layer_animation_t *layer_animation,drm_warpper_t *drm_warpper){
     layer_animation->drm_warpper = drm_warpper;
-    log_info("==============> Layer Animation Initialized!");
+    log_info("==> Layer Animation Initialized!");
     return 0;
 }
 

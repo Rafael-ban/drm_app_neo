@@ -53,7 +53,7 @@ static void *mp_parser_thread(void *param)
     memset(&packet, 0, sizeof(packet));
     memset(&dataInfo, 0, sizeof(dataInfo));
 
-    log_info("==========> MediaPlayer-Parser Thread Started!");
+    log_info("==> mp_parser Thread Started!");
 
     startagain:
     while (0 == CdxParserPrefetch(parser, &packet)) {
@@ -161,7 +161,7 @@ parser_exit:
     if (buf) {
         free(buf);
     }
-    log_info("==========> MediaPlayer-Parser Thread Ended!");
+    log_info("==> mp_parser Thread Ended!");
     pthread_exit(NULL);
     return NULL;
 }
@@ -178,7 +178,8 @@ static void *mp_decoder_thread(void *param)
 
     next_frame_time = mp_get_now_us() + 1000000 * 1000 / mp->framerate;
 
-    log_info("==========> MediaPlayer-Decoder Thread Started! target fps: %d", mp->framerate);
+    log_info("==> mp_decoder Thread Started!");
+    log_info("==> target fps: %d", mp->framerate);
 
     while (1) {
         long long current_time = mp_get_now_us();
@@ -295,7 +296,7 @@ static void *mp_decoder_thread(void *param)
     mp->thread.state |= MEDIAPLAYER_DECODER_EXIT;
     pthread_rwlock_unlock(&mp->thread.rwlock);
 
-    log_info("==========> MediaPlayer-Decoder Thread Ended!");
+    log_info("==> mp_decoder Thread Ended!");
     pthread_exit(NULL);
     return NULL;
 }
@@ -334,6 +335,7 @@ int mediaplayer_init(mediaplayer_t *mp,drm_warpper_t *drm_warpper)
 
     AddVDPlugin();
 
+    log_info("==> mp Initalized!");
     return 0;
 }
 

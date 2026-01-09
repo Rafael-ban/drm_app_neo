@@ -67,7 +67,7 @@ int main(int argc, char *argv[]){
     printf("COMPILE_TIME: %s\n", COMPILE_TIME);
 
     fputs(APP_BARNER, stderr);
-    log_info("==========> Starting EPass DRM APP!");
+    log_info("==> Starting EPass DRM APP!");
 
     usleep(3000000);
 
@@ -199,7 +199,7 @@ int main(int argc, char *argv[]){
     overlay_transition_free_image(&fade_params);
 
     /* cleanup */
-    log_info("==========> Shutting down EPass DRM APP!");
+    log_info("==> Shutting down EPass DRM APP!");
     prts_timer_destroy(&g_prts_timer);
     lvgl_drm_warp_destroy(&g_lvgl_drm_warp);
     overlay_destroy(&g_overlay);

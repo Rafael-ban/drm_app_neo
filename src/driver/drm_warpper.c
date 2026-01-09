@@ -67,7 +67,7 @@ static void* drm_warpper_display_thread(void *arg){
     };
     int ret;
 
-    log_info("==========> DRM_Warpper Display Thread Started!");
+    log_info("==> DRM_Warpper Display Thread Started!");
 
     while(drm_warpper->thread_running){
         drm_warpper_wait_for_vsync(drm_warpper);
@@ -111,7 +111,7 @@ static void* drm_warpper_display_thread(void *arg){
         }
     }
 
-    log_info("==========> DRM_Warpper Display Thread Ended!");
+    log_info("==> DRM_Warpper Display Thread Ended!");
     return NULL;
 }
 

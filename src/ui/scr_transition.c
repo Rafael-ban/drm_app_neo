@@ -10,6 +10,7 @@
 #include "ui.h"
 #include "ui/actions_settings.h"
 #include "ui/filemanager.h"
+#include "ui/actions_oplist.h"
 
 static curr_screen_t g_cur_scr;
 
@@ -120,6 +121,8 @@ void ui_schedule_screen_transition(curr_screen_t to_screen){
 // EEZ 回调 START
 // =========================================
 
+// 屏幕加载回调。更新“现在所显示的屏幕”变量。
+// 对我们手动创建的widget，还需要把它们加入到group中。
 void action_screen_loaded_cb(lv_event_t * e){
     g_cur_scr = (curr_screen_t)(lv_event_get_user_data(e));
     log_debug("action_screen_loaded_cb: cur_scr = %d", g_cur_scr);
@@ -127,17 +130,17 @@ void action_screen_loaded_cb(lv_event_t * e){
     if(g_cur_scr == curr_screen_t_SCREEN_SETTINGS){
         ui_settings_load_ctrl_word();
     }
-
-    if(g_cur_scr == curr_screen_t_SCREEN_FILEMANAGER){
+    else if(g_cur_scr == curr_screen_t_SCREEN_FILEMANAGER){
         add_filemanager_to_group();
+    }
+    else if(g_cur_scr == curr_screen_t_SCREEN_OPLIST){
+        add_oplist_btn_to_group();
     }
     return;
 };
 
 
-// =========================================
-// 全局按钮回调。主要用于屏幕切换时放过渡。 START
-// =========================================
+// 全局按钮回调。主要用于屏幕切换时放过渡。 
 void screen_key_event_cb(uint32_t key){
 
     log_debug("screen_key_event_cb: g_cur_scr = %d, key = %d", g_cur_scr, key);

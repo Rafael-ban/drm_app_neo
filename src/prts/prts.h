@@ -30,6 +30,7 @@ typedef struct {
 } prts_video_t;
 
 typedef struct {
+    int index;
     char operator_name[40];
     uuid_t uuid;
     char description[256];
@@ -57,6 +58,8 @@ typedef enum {
 typedef struct {
     prts_request_type_t type;
     int operator_index;
+    // 请求处理结束后 需不需要释放
+    bool on_heap;
 } prts_request_t;
 
 typedef struct {
@@ -82,3 +85,4 @@ void prts_init(prts_t* prts,overlay_t* overlay);
 void prts_destroy(prts_t* prts);
 
 void prts_log_parse_log(prts_t* prts,char* path,char* message,prts_parse_log_type_t type);
+void prts_request_set_operator(prts_t* prts,int operator_index);

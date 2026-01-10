@@ -348,6 +348,7 @@ void overlay_transition_swipe(overlay_t* overlay,void (*middle_cb)(void *userdat
     swipe_worker_data.curr_frame = 0;
     swipe_worker_data.frames_per_stage = params->duration / OVERLAY_ANIMATION_STEP_TIME;
     swipe_worker_data.total_frames = 3 * params->duration / OVERLAY_ANIMATION_STEP_TIME;
+    swipe_worker_data.middle_cb_called = false;
     swipe_worker_data.middle_cb = middle_cb;
     swipe_worker_data.userdata = userdata;
     swipe_worker_data.params = params;

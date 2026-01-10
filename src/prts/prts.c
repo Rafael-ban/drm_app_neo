@@ -18,15 +18,7 @@
 #include "render/mediaplayer.h"
 
 extern settings_t g_settings;
-
-
-static uint64_t get_now_us(void)
-{
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
-    return (long long)tv.tv_sec * 1000000ll + tv.tv_usec;
-}
-
+extern uint64_t get_now_us(void);
 void prts_log_parse_log(prts_t* prts,char* path,char* message,prts_parse_log_type_t type){
     if(prts->parse_log_f == NULL){
         return;
@@ -117,6 +109,7 @@ typedef struct {
 } start_transition_data_t;
 
 static void set_video_cb(void* userdata,bool is_last){
+    log_trace("set_video_cb");
     prts_video_t* data = (prts_video_t*)userdata;
     mediaplayer_stop(&g_mediaplayer);
     mediaplayer_play_video(&g_mediaplayer, data->path);
@@ -124,6 +117,7 @@ static void set_video_cb(void* userdata,bool is_last){
 
 extern void mount_video_layer_callback(void *userdata,bool is_last);
 static void set_video_mount_layer_cb(void* userdata,bool is_last){
+    log_trace("set_video_mount_layer_cb");
     prts_video_t* data = (prts_video_t*)userdata;
     mediaplayer_stop(&g_mediaplayer);
     mediaplayer_play_video(&g_mediaplayer, data->path);
@@ -140,6 +134,15 @@ static void start_transition_cb(void* userdata,bool is_last){
     else{
         cb = set_video_cb;
     }
+    log_trace("start_transition_cb");
+    log_trace("transition->type: %d", data->transition->type);
+    log_trace("transition->duration: %d", data->transition->duration);
+    log_trace("transition->image_path: %s", data->transition->image_path);
+    log_trace("transition->image_w: %d", data->transition->image_w);
+    log_trace("transition->image_h: %d", data->transition->image_h);
+    log_trace("transition->image_addr: %p", data->transition->image_addr);
+    log_trace("transition->background_color: %x", data->transition->background_color);
+
     switch(data->transition->type){
         case TRANSITION_TYPE_FADE:
             overlay_transition_fade(data->overlay, cb, data->video, data->transition);
@@ -168,7 +171,14 @@ static uint64_t schedule_video_and_transitions(prts_t* prts,prts_video_t* video,
     data->is_first_switch = is_first_switch;
 
     if(delay_us == 0){
-        start_transition_cb(data, true);
+        prts_timer_create(
+            &prts->timer_handle, 
+            100,
+            0,
+            1,
+            start_transition_cb,
+            data
+        );
     }
     else{
         prts_timer_create(
@@ -260,10 +270,8 @@ static uint64_t schedule_opinfo(prts_t* prts,olopinfo_params_t* opinfo,uint64_t 
 }
 
 static void clear_prts_busy_cb(void* userdata,bool is_last){
-    log_info("clear_prts_busy_cb");
     prts_t* prts = (prts_t*)userdata;
     prts->is_busy = false;
-    log_info("prts is not busy");
 }
 
 
@@ -313,7 +321,7 @@ static void switch_operator(prts_t* prts,int target_index){
     else{
         total_delay_us += schedule_video_and_transitions(prts, 
             &target_operator->loop_video, 
-            &target_operator->transition_loop, 
+            &target_operator->transition_in, 
             total_delay_us,
             is_first_switch
         );
@@ -348,7 +356,7 @@ static void switch_operator(prts_t* prts,int target_index){
 
 static void prts_tick_cb(void* userdata,bool is_last){
     prts_t* prts = (prts_t*)userdata;
-    prts_request_t req;
+    prts_request_t* req;
 
 
     // 如果 这一次tick中 需要处理多个干员切换，我们只处理最后一次
@@ -356,13 +364,18 @@ static void prts_tick_cb(void* userdata,bool is_last){
     int target_operator_index = -1;
 
     // 处理所有的对普瑞塞斯的请求。
-    while(spsc_bq_try_pop(&prts->req_queue, (void **)&req) == 0){
-        switch(req.type){
+    while(spsc_bq_try_pop(&prts->req_queue, (void**)&req) == 0){
+        switch(req->type){
             case PRTS_REQUEST_SET_OPERATOR:
-                target_operator_index = req.operator_index;
+                target_operator_index = req->operator_index;
                 break;
             default:
+                log_error("invalid request type: %d", req->type);
                 break;
+        }
+
+        if(req->on_heap){
+            free(req);
         }
     }
 
@@ -397,6 +410,16 @@ static void prts_tick_cb(void* userdata,bool is_last){
     return;
 }
 
+
+void prts_request_set_operator(prts_t* prts,int operator_index){
+    prts_request_t* req = malloc(sizeof(prts_request_t));
+    req->type = PRTS_REQUEST_SET_OPERATOR;
+    req->operator_index = operator_index;
+    req->on_heap = true;
+    spsc_bq_push(&prts->req_queue, (void *)req);
+}
+
+
 void prts_init(prts_t* prts, overlay_t* overlay){
 
     log_info("==> PRTS Initializing...");
@@ -412,7 +435,7 @@ void prts_init(prts_t* prts, overlay_t* overlay){
         // 告警信号要等UI启动后才能发送，这里塞到定时器回调里
         prts_timer_handle_t warning_handle;
         prts_timer_create(&warning_handle, 
-            1 * 1000 * 1000, 
+            3 * 1000 * 1000, 
             0, 
             1, 
             delayed_warning_cb, 
@@ -425,7 +448,7 @@ void prts_init(prts_t* prts, overlay_t* overlay){
         log_warn("no assets loaded, using fallback");
         prts_timer_handle_t warning_handle;
         prts_timer_create(&warning_handle, 
-            1 * 1000 * 1000, 
+            3 * 1000 * 1000, 
             0, 
             1, 
             delayed_warning_cb, 
@@ -437,6 +460,7 @@ void prts_init(prts_t* prts, overlay_t* overlay){
     }
 
     for(int i = 0; i < prts->operator_count; i++){
+        prts->operators[i].index = i;
         log_debug("========================");
         log_debug("operator[%d]:", i);
         prts_operator_log_entry(&prts->operators[i]);

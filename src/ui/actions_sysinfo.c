@@ -7,6 +7,8 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <sys/statvfs.h>
+#include <ui/scr_transition.h>
+#include "ui/actions_warning.h"
 
 // =========================================
 // 自己添加的方法 START
@@ -203,18 +205,20 @@ uint32_t ui_sysinfo_get_sd_total_size(){
     }
     return stat.f_blocks * stat.f_bsize;
 }
-int ui_sysinfo_format_sd_card(){
-    log_info("formatting SD card");
-    return 0;
-}
-
 
 
 // =========================================
 // EEZ 回调 START
 // =========================================
 
-
+void action_format_sd_card(lv_event_t * e){
+    lv_obj_t* obj = lv_event_get_target(e);
+    lv_obj_remove_state(obj, LV_STATE_PRESSED);
+    log_debug("action_format_sd_card");
+    log_error("formatting SD card is not implemented");
+    ui_warning(UI_WARNING_NOT_IMPLEMENTED);
+    ui_schedule_screen_transition(curr_screen_t_SCREEN_SPINNER);
+}
 
 const char *get_var_epass_version(){
     return EPASS_GIT_VERSION;

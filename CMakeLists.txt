@@ -49,7 +49,6 @@ add_executable(epass_drm_app
   src/render/fbdraw.c
 
   ${UI_SOURCES}
-  src/ui/actions.c
   src/ui/filemanager.c
   src/ui/scr_transition.c
   src/ui/actions_warning.c
@@ -57,6 +56,7 @@ add_executable(epass_drm_app
   src/ui/actions_settings.c
   src/ui/actions_displayimg.c
   src/ui/actions_sysinfo.c
+  src/ui/actions_oplist.c
 
 
   src/overlay/overlay.c

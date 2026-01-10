@@ -20,14 +20,8 @@
 /* external cedarx plugin entry */
 extern void AddVDPlugin(void);
 
-
-/* get current time in us */
-long long mp_get_now_us(void)
-{
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
-    return (long long)tv.tv_sec * 1000000ll + tv.tv_usec;
-}
+extern uint64_t get_now_us(void);
+#define mp_get_now_us get_now_us
 
 /* parser thread: read bitstream and feed decoder */
 static void *mp_parser_thread(void *param)

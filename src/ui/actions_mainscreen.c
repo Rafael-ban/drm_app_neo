@@ -35,11 +35,6 @@ void action_show_oplist(lv_event_t * e){
     lv_obj_remove_state(obj, LV_STATE_PRESSED);
     ui_schedule_screen_transition(curr_screen_t_SCREEN_OPLIST);
 }
-void action_format_sd_card(lv_event_t * e){
-    lv_obj_t* obj = lv_event_get_target(e);
-    lv_obj_remove_state(obj, LV_STATE_PRESSED);
-    log_debug("action_format_sd_card");
-}
 void action_show_sysinfo(lv_event_t * e){
     log_debug("action_show_sysinfo");
     lv_obj_t* obj = lv_event_get_target(e);

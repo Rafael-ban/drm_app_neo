@@ -8,6 +8,7 @@ typedef enum {
     UI_WARNING_SD_MOUNT_ERROR = 3, // SD卡挂载失败
     UI_WARNING_PRTS_CONFLICT = 4, // PRTS冲突
     UI_WARNING_NO_ASSETS = 5, // 没有干员素材
+    UI_WARNING_NOT_IMPLEMENTED = 6, // 未实现
 } warning_type_t;
 
 

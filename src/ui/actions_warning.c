@@ -26,6 +26,8 @@ inline static const char *get_warning_title(warning_type_t type){
             return "PRTS冲突";
         case UI_WARNING_NO_ASSETS:
             return "没有干员素材";
+        case UI_WARNING_NOT_IMPLEMENTED:
+            return "未实现的功能";
         default:
             return "未知错误";
     }
@@ -43,6 +45,8 @@ inline static const char *get_warning_desc(warning_type_t type){
             return "正在切换干员，请稍候重试。";
         case UI_WARNING_NO_ASSETS:
             return "请向您的通行认证终端下装干员素材。";
+        case UI_WARNING_NOT_IMPLEMENTED:
+            return "我还没写这个功能，要不来git看看帮写写？";
         default:
             return "为什么你能看到这个告警页面？";
     }
@@ -54,13 +58,19 @@ void ui_warning(warning_type_t type){
     spsc_bq_push(&g_warning_queue, (void *)type);
 }
 
+static uint32_t g_last_trigger_tick = 0;
 // 由LVGL timer回调触发。
 // 别忘记：LVGL不是线程安全的。UI的读写只能由LVGL线程完成。
 static void ui_warning_timer_cb(lv_timer_t * timer){
     warning_type_t type;
+    if(lv_tick_get() - g_last_trigger_tick < UI_WARNING_DISPLAY_DURATION / 1000){
+        return;
+    }
     if(spsc_bq_try_pop(&g_warning_queue, (void **)&type) == 0){
+        log_debug("ui_warning_timer_cb: type = %d", type);
         g_warning_type = type;
         ui_schedule_screen_transition(curr_screen_t_SCREEN_WARNING);
+        g_last_trigger_tick = lv_tick_get();
     }
 }
 

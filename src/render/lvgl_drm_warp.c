@@ -14,6 +14,8 @@
 #include "driver/key_enc_evdev.h"
 #include "ui/filemanager.h"
 #include "ui/actions_warning.h"
+#include "ui/actions_oplist.h"
+#include "prts/prts.h"
 
 static uint32_t lvgl_drm_warp_tick_get_cb(void)
 {
@@ -67,7 +69,7 @@ static void* lvgl_drm_warp_thread_entry(void *arg){
 
 
 extern void screen_key_event_cb(uint32_t key);
-void lvgl_drm_warp_init(lvgl_drm_warp_t *lvgl_drm_warp,drm_warpper_t *drm_warpper,layer_animation_t *layer_animation){
+void lvgl_drm_warp_init(lvgl_drm_warp_t *lvgl_drm_warp,drm_warpper_t *drm_warpper,layer_animation_t *layer_animation,prts_t *prts){
 
     lvgl_drm_warp->drm_warpper = drm_warpper;
     lvgl_drm_warp->layer_animation = layer_animation;
@@ -128,8 +130,11 @@ void lvgl_drm_warp_init(lvgl_drm_warp_t *lvgl_drm_warp,drm_warpper_t *drm_warppe
     // gui_app_create_ui(lvgl_drm_warp);
     ui_init();
     loadScreen(SCREEN_ID_SPINNER);
-    ui_warning_init();
     create_filemanager();
+
+    // UI 连锁 组件
+    ui_warning_init();
+    ui_oplist_init(prts);
 
     lvgl_drm_warp->running = 1;
     pthread_create(&lvgl_drm_warp->lvgl_thread, NULL, lvgl_drm_warp_thread_entry, lvgl_drm_warp);

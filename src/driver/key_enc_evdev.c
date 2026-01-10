@@ -25,7 +25,7 @@ static int key_enc_evdev_process_key(uint16_t code)
     }
 }
 
-static void print_lv_key_str(int key){
+void print_lv_key_str(int key){
     switch(key){
         case LV_KEY_LEFT:
             log_debug("LV_KEY_LEFT");

@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <stdint.h>
 #include <signal.h>
+#include <sys/time.h>
 
 #include "config.h"
 #include "driver/drm_warpper.h"
@@ -10,14 +11,11 @@
 #include "render/mediaplayer.h"
 #include "render/lvgl_drm_warp.h"
 #include "overlay/overlay.h"
-#include "overlay/transitions.h"
-#include "overlay/opinfo.h"
 #include "utils/timer.h"
 #include "render/layer_animation.h"
 #include "utils/settings.h"
 #include "utils/timer.h"
 #include "utils/cacheassets.h"
-#include "ui/actions_warning.h"
 #include "prts/prts.h"
 
 /* global variables */
@@ -48,6 +46,30 @@ void mount_video_layer_callback(void *userdata,bool is_last){
     drm_warpper_set_layer_coord(&g_drm_warpper, DRM_WARPPER_LAYER_OVERLAY, 0,0);
 }
 
+uint64_t get_now_us(void)
+{
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    return (long long)tv.tv_sec * 1000000ll + tv.tv_usec;
+}
+
+// ============ 组件依赖关系： ============
+// UI 依赖 PRTS 扫描后生成干员列表
+// LayerAnimation 依赖 PRTS定时器 与 drm warpper
+// mediaplayer 依赖 drm warpper
+// cacheassets 依赖 mediaplayer 初始化用的那个buffer
+// overlay 依赖 drm warpper 与 layer animation
+// prts 依赖 overlay
+
+// ============ 组件初始化顺序： ============
+// 1. drm warpper
+// 2. prts timer
+// 3. settings
+// 4. layer animation
+// 5. mediaplayer
+// 6. cacheassets
+// 7. overlay
+// 8. prts
 
 int main(int argc, char *argv[]){
     if(argc == 2){
@@ -71,14 +93,11 @@ int main(int argc, char *argv[]){
 
     usleep(3000000);
 
-    if(drm_warpper_init(&g_drm_warpper) != 0){
-        log_error("failed to initialize DRM warpper");
-        return -1;
-    }
+    // ============ DRM Warpper 初始化 ===============
+    drm_warpper_init(&g_drm_warpper);
 
     // ============ PRTS 计时器 初始化 ===============
     prts_timer_init(&g_prts_timer);
-
 
     // ============ 设置 初始化 ===============
     settings_init(&g_settings);
@@ -132,6 +151,9 @@ int main(int argc, char *argv[]){
 
     overlay_init(&g_overlay, &g_drm_warpper, &g_layer_animation);
 
+    // ============ PRTS 初始化===============
+    prts_init(&g_prts, &g_overlay);
+
 
     // ============ LVGL 初始化 ===============
     drm_warpper_init_layer(
@@ -141,13 +163,9 @@ int main(int argc, char *argv[]){
         DRM_WARPPER_LAYER_MODE_RGB565
     );
 
-    lvgl_drm_warp_init(&g_lvgl_drm_warp, &g_drm_warpper,&g_layer_animation);
+    lvgl_drm_warp_init(&g_lvgl_drm_warp, &g_drm_warpper,&g_layer_animation,&g_prts);
     drm_warpper_set_layer_coord(&g_drm_warpper, DRM_WARPPER_LAYER_UI, 0, SCREEN_HEIGHT);
 
-    // ============ PRTS 初始化===============
-    prts_init(&g_prts, &g_overlay);
-
-    
 
     // ============ 主循环 ===============
     // does nothing, stuck here until signal is received

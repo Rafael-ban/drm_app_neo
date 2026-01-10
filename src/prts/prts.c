@@ -223,42 +223,41 @@ static void start_opinfo_cb(void* userdata,bool is_last){
 }
 // 排期 opinfo
 static uint64_t schedule_opinfo(prts_t* prts,olopinfo_params_t* opinfo,uint64_t delay_us){
-    log_info("schedule_opinfo");
-    log_info("delay_us: %llu", delay_us);
-    log_info("opinfo->appear_time: %d", opinfo->appear_time);
-    log_info("opinfo->duration: %d", opinfo->duration);
-    log_info("opinfo->type: %d", opinfo->type);
-    log_info("opinfo->operator_name: %s", opinfo->operator_name);
-    log_info("opinfo->operator_code: %s", opinfo->operator_code);
-    log_info("opinfo->barcode_text: %s", opinfo->barcode_text);
-    log_info("opinfo->aux_text: %s", opinfo->aux_text);
-    log_info("opinfo->staff_text: %s", opinfo->staff_text);
-    log_info("opinfo->color: %x", opinfo->color);
-    log_info("opinfo->logo_path: %s", opinfo->logo_path);
-    log_info("opinfo->class_path: %s", opinfo->class_path);
-    log_info("opinfo->logo_w: %d", opinfo->logo_w);
-    log_info("opinfo->logo_h: %d", opinfo->logo_h);
-    log_info("opinfo->class_w: %d", opinfo->class_w);
-    log_info("opinfo->class_h: %d", opinfo->class_h);
-    log_info("opinfo->logo_addr: %p", opinfo->logo_addr);
-    log_info("opinfo->class_addr: %p", opinfo->class_addr);
-    log_info("opinfo->logo_addr: %p", opinfo->logo_addr);
+    // log_info("schedule_opinfo");
+    // log_info("delay_us: %llu", delay_us);
+    // log_info("opinfo->appear_time: %d", opinfo->appear_time);
+    // log_info("opinfo->duration: %d", opinfo->duration);
+    // log_info("opinfo->type: %d", opinfo->type);
+    // log_info("opinfo->operator_name: %s", opinfo->operator_name);
+    // log_info("opinfo->operator_code: %s", opinfo->operator_code);
+    // log_info("opinfo->barcode_text: %s", opinfo->barcode_text);
+    // log_info("opinfo->aux_text: %s", opinfo->aux_text);
+    // log_info("opinfo->staff_text: %s", opinfo->staff_text);
+    // log_info("opinfo->color: %x", opinfo->color);
+    // log_info("opinfo->logo_path: %s", opinfo->logo_path);
+    // log_info("opinfo->class_path: %s", opinfo->class_path);
+    // log_info("opinfo->logo_w: %d", opinfo->logo_w);
+    // log_info("opinfo->logo_h: %d", opinfo->logo_h);
+    // log_info("opinfo->class_w: %d", opinfo->class_w);
+    // log_info("opinfo->class_h: %d", opinfo->class_h);
+    // log_info("opinfo->logo_addr: %p", opinfo->logo_addr);
+    // log_info("opinfo->class_addr: %p", opinfo->class_addr);
+    // log_info("opinfo->logo_addr: %p", opinfo->logo_addr);
     start_opinfo_data_t *data = (start_opinfo_data_t*)malloc(sizeof(start_opinfo_data_t));
     data->overlay = prts->overlay;
     data->opinfo = opinfo;
-    if(delay_us == 0){
-        start_opinfo_cb(data, true);
-    }
-    else{
-        prts_timer_create(
-            &prts->timer_handle, 
-            delay_us + opinfo->appear_time,
-            0,
-            1,
-            start_opinfo_cb,
-            data
-        );
-    }
+
+    // FIXME: 加1s的延迟，防止opinfo和transition_in/loop同时开始.
+    // 这个其实是transition跳帧导致的。最好的办法是在transtion里加end cb.
+
+    prts_timer_create(
+        &prts->timer_handle, 
+        delay_us + opinfo->appear_time + 1 * 1000 * 1000,
+        0,
+        1,
+        start_opinfo_cb,
+        data
+    );
     switch(opinfo->type){
         case OPINFO_TYPE_IMAGE:
             return opinfo->appear_time + opinfo->duration;
@@ -285,11 +284,12 @@ static void switch_operator(prts_t* prts,int target_index){
     log_info("switching operator from %s to %s", curr_operator->operator_name, target_operator->operator_name);
 
     // 卸载当前干员。此时overlay播放消失动画，但是mediaplayer还在运行。
-    overlay_abort(prts->overlay);
-    overlay_opinfo_free_image(&curr_operator->opinfo_params);
-    overlay_transition_free_image(&curr_operator->transition_in);
-    overlay_transition_free_image(&curr_operator->transition_loop);
-    
+    if(!is_first_switch){
+        overlay_abort(prts->overlay);
+        overlay_opinfo_free_image(&curr_operator->opinfo_params);
+        overlay_transition_free_image(&curr_operator->transition_in);
+        overlay_transition_free_image(&curr_operator->transition_loop);
+    }
 
     // 加载新干员
     overlay_transition_load_image(&target_operator->transition_in);
@@ -299,7 +299,8 @@ static void switch_operator(prts_t* prts,int target_index){
 
     uint64_t total_delay_us = 0;
 
-    // 存在intro video，则做全量 transition_in -> intro video -> transition_loop -> loop video
+    // 存在intro video，且闭锁入场动画软压板没投
+    // 则做全量 transition_in -> intro video -> transition_loop -> loop video
     if(target_operator->intro_video.enabled && g_settings.ctrl_word.no_intro_block == 0){
         total_delay_us += schedule_video_and_transitions(prts, 
             &target_operator->intro_video, 
@@ -456,7 +457,6 @@ void prts_init(prts_t* prts, overlay_t* overlay){
         );
         prts_operator_try_load(prts, &prts->operators[0], PRTS_FALLBACK_ASSET_DIR);
         prts->operator_count = 1;
-        return;
     }
 
     for(int i = 0; i < prts->operator_count; i++){

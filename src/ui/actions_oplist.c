@@ -18,12 +18,14 @@ ui_oplist_t g_ui_oplist;
 extern objects_t objects;
 
 static void op_btn_click_cb(lv_event_t *e){
-    prts_operator_entry_t* op = (prts_operator_entry_t*)lv_event_get_user_data(e);
+    
+    lv_obj_t* obj = lv_event_get_target(e);
+    lv_obj_remove_state(obj, LV_STATE_PRESSED);
 
+    prts_operator_entry_t* op = (prts_operator_entry_t*)lv_event_get_user_data(e);
     prts_t *prts = g_ui_oplist.prts;
     
     prts_request_set_operator(prts, op->index);
-    
     ui_schedule_screen_transition(curr_screen_t_SCREEN_SPINNER);
 }
 
@@ -83,4 +85,8 @@ void add_oplist_btn_to_group(){
         lv_group_add_obj(groups.op, g_ui_oplist.entry_objs[i].opbtn);
     }
     lv_group_add_obj(groups.op, objects.mainmenu_btn);
+}
+
+void ui_oplist_focus_current_operator(){
+    lv_group_focus_obj(g_ui_oplist.entry_objs[g_ui_oplist.prts->operator_index].opbtn);
 }

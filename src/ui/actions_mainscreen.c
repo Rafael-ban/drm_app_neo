@@ -26,7 +26,8 @@ void action_restart_app(lv_event_t * e){
 
 void action_shutdown(lv_event_t * e){
     log_debug("action_shutdown");
-    system("poweroff");
+    g_running = 0;
+    g_exitcode = EXITCODE_SHUTDOWN;
 }
 
 void action_show_oplist(lv_event_t * e){

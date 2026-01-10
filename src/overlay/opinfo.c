@@ -58,6 +58,7 @@ void overlay_opinfo_show_image(overlay_t* overlay,olopinfo_params_t* params){
     }
     
     drm_warpper_enqueue_display_item(overlay->drm_warpper, DRM_WARPPER_LAYER_OVERLAY, item);
+    overlay->overlay_used = 1;
 
     layer_animation_ease_in_out_move(
         overlay->layer_animation, 
@@ -711,6 +712,7 @@ void overlay_opinfo_show_arknights(overlay_t* overlay,olopinfo_params_t* params)
     }
 
     overlay->request_abort = 0;
+    overlay->overlay_used = 1;
 
     prts_timer_create(
         &overlay->overlay_timer_handle  ,

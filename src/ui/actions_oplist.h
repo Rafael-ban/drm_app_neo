@@ -24,5 +24,5 @@ extern ui_oplist_t g_ui_oplist;
 // 自己添加的方法
 void ui_oplist_init(prts_t* prts);
 void add_oplist_btn_to_group();
-
+void ui_oplist_focus_current_operator();
 // EEZ回调不需要添加。

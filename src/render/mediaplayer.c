@@ -362,6 +362,9 @@ int mediaplayer_play_video(mediaplayer_t *mp, const char *file)
         return -1;
     }
 
+    // 每次开始之前都需要reset cache
+    drm_warpper_reset_cache_ioctl(mp->drm_warpper);
+
     memset(mp->input_uri, 0, sizeof(mp->input_uri));
     snprintf(mp->input_uri, sizeof(mp->input_uri), "file://%s", file);
 

@@ -41,6 +41,7 @@ typedef struct {
     // 就让worker的func 来处理一下资源回收工作。
     // request以后，只需要看timer handler是否归零 就可以知道是否已经处理完了。
     int request_abort;
+    int overlay_used;
 } overlay_t;
 
 

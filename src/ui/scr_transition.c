@@ -135,6 +135,7 @@ void action_screen_loaded_cb(lv_event_t * e){
     }
     else if(g_cur_scr == curr_screen_t_SCREEN_OPLIST){
         add_oplist_btn_to_group();
+        ui_oplist_focus_current_operator();
     }
     return;
 };

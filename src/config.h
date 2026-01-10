@@ -172,6 +172,13 @@
 #define UI_WARNING_TIMER_TICK_PERIOD (200 * 1000)
 #define UI_WARNING_DISPLAY_DURATION (3 * 1000 * 1000)
 
+// ========== Battery Configuration ==========
+#define UI_BATTERY_ADC_PATH "/sys/bus/iio/devices/iio:device0/in_voltage0_raw"
+#define UI_BATTERY_EMPTY_VALUE 2100
+#define UI_BATTERY_FULL_VALUE 2500
+#define UI_BATTERY_CHARGING_VALUE 2600
+#define UI_BATTERY_PADDING 10
+
 // ========== Storage Configuration ==========
 #define NAND_MOUNT_POINT "/"
 #define SD_MOUNT_POINT "/sd"
@@ -197,3 +204,4 @@
 #define EXITCODE_NORMAL 0
 #define EXITCODE_RESTART_APP 1
 #define EXITCODE_APPSTART 2
+#define EXITCODE_SHUTDOWN 3

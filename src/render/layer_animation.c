@@ -175,6 +175,11 @@ static void layer_animation_fade_cb(void *userdata,bool is_last){
     fade_data->i++;
 
     if (is_last){
+        drm_warpper_set_layer_alpha(
+            fade_data->drm_warpper, 
+            fade_data->layer_id, 
+            fade_data->alphaarr[fade_data->step_count - 1]
+        );
         log_debug("Layer Animation Fade Finished!");
         free(fade_data->alphaarr);
         free(fade_data);

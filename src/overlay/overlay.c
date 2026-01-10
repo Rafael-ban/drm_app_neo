@@ -162,6 +162,12 @@ int overlay_destroy(overlay_t* overlay){
 // 现在我们还是用轮询的方式来做的。
 // 如果卡住prts太久，导致那边定时器被双重触发，就需要想个办法处理一下。
 void overlay_abort(overlay_t* overlay){
+    if(overlay->overlay_used == 0){
+        log_warn("overlay is not used, skip abort");
+        return;
+    }
+    overlay->overlay_used = 0;
+    
     layer_animation_ease_in_out_move(
         overlay->layer_animation, 
         DRM_WARPPER_LAYER_OVERLAY,

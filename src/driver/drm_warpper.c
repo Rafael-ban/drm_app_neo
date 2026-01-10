@@ -34,7 +34,7 @@ static void drm_warpper_wait_for_vsync(drm_warpper_t *drm_warpper){
 
 // 内核那边会缓存用户地址到物理地址，以便快速挂。
 // 每次启动前都需要reset cache，避免上次启动的残留。
-static void drm_warpper_reset_cache_ioctl(drm_warpper_t *drm_warpper){
+void drm_warpper_reset_cache_ioctl(drm_warpper_t *drm_warpper){
     int ret;
     ret = drmIoctl(drm_warpper->fd, DRM_IOCTL_SRGN_RESET_FB_CACHE, NULL);
     if(ret < 0){
@@ -90,6 +90,7 @@ static void* drm_warpper_display_thread(void *arg){
                     if(item->mount.type == DRM_SRGN_ATOMIC_COMMIT_MOUNT_FB_NORMAL 
                         || item->mount.type == DRM_SRGN_ATOMIC_COMMIT_MOUNT_FB_YUV){
                         if(layer->curr_item){
+                            // 如果程序终止 对端consumer可能已经退出 导致这里卡死。
                             spsc_bq_push(&layer->free_queue, layer->curr_item);
                         }
                         layer->curr_item = item;
@@ -214,11 +215,14 @@ int drm_warpper_destroy(drm_warpper_t *drm_warpper){
     drmModeFreeResources(drm_warpper->res);
     close(drm_warpper->fd);
     drm_warpper->thread_running = false;
-    pthread_join(drm_warpper->display_thread, NULL);
-
     for(int i = 0; i < 4; i++){
         drm_warpper_destroy_layer(drm_warpper, i);
     }
+    log_info("wait for display thread to finish");
+    pthread_join(drm_warpper->display_thread, NULL);
+    log_info("display thread finished");
+
+
     return 0;
 }
 

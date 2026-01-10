@@ -79,3 +79,5 @@ int drm_warpper_try_dequeue_free_item(drm_warpper_t *drm_warpper,int layer_id,dr
 
 int drm_warpper_set_layer_coord(drm_warpper_t *drm_warpper,int layer_id,int x,int y);
 int drm_warpper_set_layer_alpha(drm_warpper_t *drm_warpper,int layer_id,int alpha);
+
+void drm_warpper_reset_cache_ioctl(drm_warpper_t *drm_warpper);

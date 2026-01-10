@@ -2,6 +2,7 @@
 #include <dirent.h>
 #include <overlay/opinfo.h>
 #include <overlay/overlay.h>
+#include <overlay/transitions.h>
 #include <prts/operators.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -16,6 +17,7 @@
 #include "utils/settings.h"
 #include "vars.h"
 #include "render/mediaplayer.h"
+#include "ui/scr_transition.h"
 
 extern settings_t g_settings;
 extern uint64_t get_now_us(void);
@@ -128,34 +130,39 @@ static void set_video_mount_layer_cb(void* userdata,bool is_last){
 static void start_transition_cb(void* userdata,bool is_last){
     start_transition_data_t* data = (start_transition_data_t*)userdata;
     void (*cb)(void* userdata,bool is_last) = NULL;
+    // fixme: 第一次过渡时 如果效果是fade会出现透明度问题
+    // 这里直接写死用swipe。
     if(data->is_first_switch){
         cb = set_video_mount_layer_cb;
+        if(data->transition->type != TRANSITION_TYPE_NONE){
+            overlay_transition_swipe(data->overlay, cb, data->video, data->transition);
+        }
     }
     else{
         cb = set_video_cb;
+        switch(data->transition->type){
+            case TRANSITION_TYPE_FADE:
+                overlay_transition_fade(data->overlay, cb, data->video, data->transition);
+                break;
+            case TRANSITION_TYPE_MOVE:
+                overlay_transition_move(data->overlay, cb, data->video, data->transition);
+                break;
+            case TRANSITION_TYPE_SWIPE:
+                overlay_transition_swipe(data->overlay, cb, data->video, data->transition);
+                break;
+            default:
+                break;
+        }
     }
-    log_trace("start_transition_cb");
-    log_trace("transition->type: %d", data->transition->type);
-    log_trace("transition->duration: %d", data->transition->duration);
-    log_trace("transition->image_path: %s", data->transition->image_path);
-    log_trace("transition->image_w: %d", data->transition->image_w);
-    log_trace("transition->image_h: %d", data->transition->image_h);
-    log_trace("transition->image_addr: %p", data->transition->image_addr);
-    log_trace("transition->background_color: %x", data->transition->background_color);
+    // log_trace("start_transition_cb");
+    // log_trace("transition->type: %d", data->transition->type);
+    // log_trace("transition->duration: %d", data->transition->duration);
+    // log_trace("transition->image_path: %s", data->transition->image_path);
+    // log_trace("transition->image_w: %d", data->transition->image_w);
+    // log_trace("transition->image_h: %d", data->transition->image_h);
+    // log_trace("transition->image_addr: %p", data->transition->image_addr);
+    // log_trace("transition->background_color: %x", data->transition->background_color);
 
-    switch(data->transition->type){
-        case TRANSITION_TYPE_FADE:
-            overlay_transition_fade(data->overlay, cb, data->video, data->transition);
-            break;
-        case TRANSITION_TYPE_MOVE:
-            overlay_transition_move(data->overlay, cb, data->video, data->transition);
-            break;
-        case TRANSITION_TYPE_SWIPE:
-            overlay_transition_swipe(data->overlay, cb, data->video, data->transition);
-            break;
-        default:
-            break;
-    }
     if(is_last){
         free(data);
     }
@@ -289,6 +296,7 @@ static void switch_operator(prts_t* prts,int target_index){
         overlay_opinfo_free_image(&curr_operator->opinfo_params);
         overlay_transition_free_image(&curr_operator->transition_in);
         overlay_transition_free_image(&curr_operator->transition_loop);
+        ui_top_fix();
     }
 
     // 加载新干员
@@ -296,8 +304,8 @@ static void switch_operator(prts_t* prts,int target_index){
     overlay_transition_load_image(&target_operator->transition_loop);
     overlay_opinfo_load_image(&target_operator->opinfo_params);
 
-
-    uint64_t total_delay_us = 0;
+    // 给UI消失的时间。
+    uint64_t total_delay_us = UI_LAYER_ANIMATION_DURATION;
 
     // 存在intro video，且闭锁入场动画软压板没投
     // 则做全量 transition_in -> intro video -> transition_loop -> loop video

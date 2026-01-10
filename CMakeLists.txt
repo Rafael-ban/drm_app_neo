@@ -51,6 +51,7 @@ add_executable(epass_drm_app
   ${UI_SOURCES}
   src/ui/filemanager.c
   src/ui/scr_transition.c
+  src/ui/battery.c
   src/ui/actions_warning.c
   src/ui/actions_mainscreen.c
   src/ui/actions_settings.c

@@ -11,6 +11,7 @@
 #include "ui/actions_settings.h"
 #include "ui/filemanager.h"
 #include "ui/actions_oplist.h"
+#include "ui/scr_transition.h"
 
 static curr_screen_t g_cur_scr;
 
@@ -115,6 +116,32 @@ void ui_schedule_screen_transition(curr_screen_t to_screen){
         load_screen(to_screen);
     }
 
+}
+
+static void ui_top_fix_cb(void* userdata,bool is_last){
+    lv_display_t * disp = lv_display_get_default();
+    lvgl_drm_warp_t* lvgl_drm_warp = (lvgl_drm_warp_t*)lv_display_get_driver_data(disp);
+
+    int y = get_screen_target_y(g_cur_scr);
+
+    layer_animation_ease_in_out_move(
+        lvgl_drm_warp->layer_animation, 
+        DRM_WARPPER_LAYER_UI, 
+        0, y, 0, y, UI_LAYER_ANIMATION_DURATION / 2, 0);
+}
+
+// fixme: 在切换的时候 可能会让ui层消失。。
+// 因此我们直接做一次空过渡。
+void ui_top_fix(){
+   prts_timer_handle_t timer_handle;
+   prts_timer_create(
+    &timer_handle, 
+    UI_LAYER_ANIMATION_DURATION, 
+    0, 
+    1, 
+    ui_top_fix_cb, 
+    NULL
+   );
 }
 
 // =========================================

@@ -281,7 +281,6 @@ static void switch_operator(prts_t* prts,int target_index){
         overlay_opinfo_free_image(&curr_operator->opinfo_params);
         overlay_transition_free_image(&curr_operator->transition_in);
         overlay_transition_free_image(&curr_operator->transition_loop);
-        ui_top_fix();
     }
 
     // 加载新干员
@@ -362,8 +361,13 @@ static void prts_tick_cb(void* userdata,bool is_last){
     }
 
 
-    // 由 外部对PRTS发起切换请求。
+    // 由 时间触发
     if(target_operator_index == -1){
+        if(!ui_is_hidden()){
+            log_info("switch_operator: ui is not hidden, skip switch");
+            settings_unlock(&g_settings);
+            return;
+        }
         target_operator_index = get_switch_target_index(prts);
     }
 

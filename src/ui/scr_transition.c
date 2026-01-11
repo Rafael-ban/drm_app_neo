@@ -131,20 +131,9 @@ static void ui_top_fix_cb(void* userdata,bool is_last){
         0, y, 0, y, UI_LAYER_ANIMATION_DURATION / 2, 0);
 }
 
-// fixme: 在切换的时候 可能会让ui层消失。。
-// 因此我们直接做一次空过渡。
-void ui_top_fix(){
-   prts_timer_handle_t timer_handle;
-   prts_timer_create(
-    &timer_handle, 
-    UI_LAYER_ANIMATION_DURATION, 
-    0, 
-    1, 
-    ui_top_fix_cb, 
-    NULL
-   );
+bool ui_is_hidden(){
+    return g_cur_scr == curr_screen_t_SCREEN_SPINNER;
 }
-
 // =========================================
 // EEZ 回调 START
 // =========================================

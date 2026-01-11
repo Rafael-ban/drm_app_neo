@@ -23,7 +23,7 @@
     "与鹰角网络没有任何直接或间接的关联。相关游戏素材版权属于鹰角网络。\n"\
     "这是我对电子产业全流程的一次尝试，目的是学习项目管理。可能会有很多不足的地方，希望您能多多包涵。"
 
-#define APP_VERSION "alpha2.1"
+#define APP_VERSION "a2.1"
 #define APP_VERSION_STRING (APP_VERSION "_" EPASS_GIT_VERSION)
 
 // ========== Settings Configuration ==========

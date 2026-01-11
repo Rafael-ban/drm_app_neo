@@ -381,7 +381,7 @@ static void arknights_overlay_worker(void *userdata,int skipped_frames){
             &fbdst, &dst_rect, 
             params->aux_text, 
             &ui_font_sourcesans_reg_14, 
-            0xFFFFFFFF,0, 
+            0xFFFFFFFF,14, 
             data->aux_text_cpidx, data->aux_text_cpidx + 1
         );
         update->aux_text = 0;

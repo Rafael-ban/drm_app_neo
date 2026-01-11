@@ -12,8 +12,17 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "utils/stb_image.h"
 
+static void oltr_callback_cleanup(void* userdata,bool is_last){
+    oltr_callback_t* callback = (oltr_callback_t*)userdata;
+    log_trace("oltr_callback_cleanup");
+    if(callback->on_heap){
+        free(callback);
+    }
+    log_trace("oltr_callback_cleanup: done");
+}
+
 // 渐变过渡，准备完成后无耗时操作，不需要使用worker。
-void overlay_transition_fade(overlay_t* overlay,void (*middle_cb)(void *userdata,bool is_last),void* userdata,oltr_params_t* params){
+void overlay_transition_fade(overlay_t* overlay,oltr_callback_t* callback,oltr_params_t* params){
     drm_warpper_queue_item_t* item;
     fbdraw_fb_t fbsrc,fbdst;
     fbdraw_rect_t src_rect,dst_rect;
@@ -66,10 +75,7 @@ void overlay_transition_fade(overlay_t* overlay,void (*middle_cb)(void *userdata
         0
     );
 
-    // 全部遮住以后挂载video层
-    prts_timer_handle_t init_handler;
-    prts_timer_create(&init_handler,params->duration,0,1,middle_cb,userdata);
-    
+
     // 渐变到透明
     layer_animation_fade_out(
         overlay->layer_animation, 
@@ -78,10 +84,18 @@ void overlay_transition_fade(overlay_t* overlay,void (*middle_cb)(void *userdata
         2 * params->duration
     );
 
+    prts_timer_handle_t middle_cb_handler;
+    prts_timer_create(&middle_cb_handler,params->duration,0,1,callback->middle_cb,callback->middle_cb_userdata);
+    
+    prts_timer_handle_t end_cb_handler;
+    prts_timer_create(&end_cb_handler,3 * params->duration,0,1,callback->end_cb,callback->end_cb_userdata);
+    
+    prts_timer_handle_t callback_cleanup_handler;
+    prts_timer_create(&callback_cleanup_handler,3 * params->duration + 500 * 1000,0,1,oltr_callback_cleanup,callback);
 }
 
 // 贝塞尔函数移动过渡。 不需要使用worker
-void overlay_transition_move(overlay_t* overlay,void (*middle_cb)(void *userdata,bool is_last),void* userdata,oltr_params_t* params){
+void overlay_transition_move(overlay_t* overlay,oltr_callback_t* callback,oltr_params_t* params){
     drm_warpper_queue_item_t* item;
     fbdraw_fb_t fbsrc,fbdst;
     fbdraw_rect_t src_rect,dst_rect;
@@ -132,10 +146,6 @@ void overlay_transition_move(overlay_t* overlay,void (*middle_cb)(void *userdata
         0
     );
 
-    // 全部遮住以后挂载video层
-    prts_timer_handle_t init_handler;
-    prts_timer_create(&init_handler,params->duration,0,1,middle_cb,userdata);
-    
     layer_animation_ease_in_move(
         overlay->layer_animation, 
         DRM_WARPPER_LAYER_OVERLAY, 
@@ -144,6 +154,15 @@ void overlay_transition_move(overlay_t* overlay,void (*middle_cb)(void *userdata
         params->duration, 
         2 * params->duration
     );
+
+    prts_timer_handle_t middle_cb_handler;
+    prts_timer_create(&middle_cb_handler,params->duration,0,1,callback->middle_cb,callback->middle_cb_userdata);
+    
+    prts_timer_handle_t end_cb_handler;
+    prts_timer_create(&end_cb_handler,3 * params->duration,0,1,callback->end_cb,callback->end_cb_userdata);
+
+    prts_timer_handle_t callback_cleanup_handler;
+    prts_timer_create(&callback_cleanup_handler,3 * params->duration + 500 * 1000,0,1,oltr_callback_cleanup,callback);
 
 }
 
@@ -164,8 +183,8 @@ typedef struct {
     int* bezeir_values;
 
     bool middle_cb_called;
-    void (*middle_cb)(void *userdata,bool is_last);
-    void* userdata;
+    oltr_callback_t* callback;
+
 } swipe_worker_data_t;
 
 typedef enum{
@@ -180,6 +199,9 @@ static void swipe_cleanup(swipe_worker_data_t* data){
     free(data->bezeir_values);
     data->bezeir_values = NULL;
     data->overlay->overlay_timer_handle = 0;
+    if(data->callback->on_heap){
+        free(data->callback);
+    }
     return;
 }
 
@@ -223,7 +245,9 @@ static void swipe_worker(void *userdata,int skipped_frames){
     else if (data->curr_frame < 2 * data->frames_per_stage){
         draw_state = SWIPE_DRAW_IDLE;
         if(!data->middle_cb_called){
-            data->middle_cb(data->userdata, false);
+            if(data->callback->middle_cb){
+                data->callback->middle_cb(data->callback->middle_cb_userdata, false);
+            }
             data->middle_cb_called = true;
         }
     }
@@ -308,6 +332,9 @@ static void swipe_worker(void *userdata,int skipped_frames){
     drm_warpper_enqueue_display_item(data->overlay->drm_warpper, DRM_WARPPER_LAYER_OVERLAY, item);
     data->curr_frame ++;
     if(data->curr_frame >= data->total_frames){
+        if(data->callback->end_cb){
+            data->callback->end_cb(data->callback->end_cb_userdata, true);
+        }
         swipe_cleanup(data);
         return;
     }
@@ -321,7 +348,7 @@ static void swipe_timer_cb(void *userdata,bool is_last){
 }
 
 // 类似drm_app的过渡效果，但是使用贝塞尔，需要使用worker。
-void overlay_transition_swipe(overlay_t* overlay,void (*middle_cb)(void *userdata,bool is_last),void* userdata,oltr_params_t* params){
+void overlay_transition_swipe(overlay_t* overlay,oltr_callback_t* callback,oltr_params_t* params){
     drm_warpper_queue_item_t* item;
     uint32_t* vaddr;
 
@@ -349,8 +376,7 @@ void overlay_transition_swipe(overlay_t* overlay,void (*middle_cb)(void *userdat
     swipe_worker_data.frames_per_stage = params->duration / OVERLAY_ANIMATION_STEP_TIME;
     swipe_worker_data.total_frames = 3 * params->duration / OVERLAY_ANIMATION_STEP_TIME;
     swipe_worker_data.middle_cb_called = false;
-    swipe_worker_data.middle_cb = middle_cb;
-    swipe_worker_data.userdata = userdata;
+    swipe_worker_data.callback = callback;
     swipe_worker_data.params = params;
     swipe_worker_data.image_start_x = UI_WIDTH / 2 - params->image_w / 2;
     swipe_worker_data.image_end_x = UI_WIDTH / 2 + params->image_w / 2;

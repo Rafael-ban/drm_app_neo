@@ -76,7 +76,7 @@ uint64_t get_now_us(void)
 int main(int argc, char *argv[]){
     if(argc == 2){
         if(strcmp(argv[1], "version") == 0){
-            printf("EPASS_NEO_GIT_VERSION: %s\n", EPASS_GIT_VERSION);
+            printf("APP_VERSION: %s\n", APP_VERSION_STRING);
             printf("COMPILE_TIME: %s\n", COMPILE_TIME);
             return 0;
         }
@@ -87,7 +87,7 @@ int main(int argc, char *argv[]){
     signal(SIGINT, signal_handler);
     signal(SIGTERM, signal_handler);
 
-    printf("EPASS_NEO_GIT_VERSION: %s\n", EPASS_GIT_VERSION);
+    printf("APP_VERSION: %s\n", APP_VERSION_STRING);
     printf("COMPILE_TIME: %s\n", COMPILE_TIME);
 
     fputs(APP_BARNER, stderr);

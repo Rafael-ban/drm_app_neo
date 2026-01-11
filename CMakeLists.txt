@@ -128,7 +128,6 @@ target_link_libraries(epass_drm_app
   ${LIBEVDEV_LIBRARIES}
   ${LIBDRM_LIBRARIES}
   ${PNG_LIBRARIES}
-
   lvgl
 )
 

@@ -23,9 +23,18 @@ typedef struct {
     uint32_t background_color;
 } oltr_params_t;
 
-void overlay_transition_fade(overlay_t* overlay,void (*middle_cb)(void *userdata,bool is_last),void* userdata,oltr_params_t* params);
-void overlay_transition_move(overlay_t* overlay,void (*middle_cb)(void *userdata,bool is_last),void* userdata,oltr_params_t* params);
-void overlay_transition_swipe(overlay_t* overlay,void (*middle_cb)(void *userdata,bool is_last),void* userdata,oltr_params_t* params);
+typedef struct {
+    void (*middle_cb)(void *userdata,bool is_last);
+    void* middle_cb_userdata;
+    void (*end_cb)(void *userdata,bool is_last);
+    void* end_cb_userdata;
+    // 需不需要 transition 结束后释放这个结构体
+    bool on_heap;
+} oltr_callback_t;
+
+void overlay_transition_fade(overlay_t* overlay,oltr_callback_t* callback,oltr_params_t* params);
+void overlay_transition_move(overlay_t* overlay,oltr_callback_t* callback,oltr_params_t* params);
+void overlay_transition_swipe(overlay_t* overlay,oltr_callback_t* callback,oltr_params_t* params);
 
 void overlay_transition_load_image(oltr_params_t* params);
 void overlay_transition_free_image(oltr_params_t* params);

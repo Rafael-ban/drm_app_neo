@@ -12,6 +12,7 @@
 #include "ui/filemanager.h"
 #include "ui/actions_oplist.h"
 #include "ui/scr_transition.h"
+#include <ui/actions_displayimg.h>
 
 static curr_screen_t g_cur_scr;
 
@@ -177,6 +178,9 @@ void screen_key_event_cb(uint32_t key){
     if (g_cur_scr == curr_screen_t_SCREEN_DISPLAYIMG){
         if(key == LV_KEY_ESC || key == LV_KEY_ENTER){
             ui_schedule_screen_transition(curr_screen_t_SCREEN_SPINNER);
+        }
+        else{
+            ui_displayimg_key_event(key);
         }
         return;
     }

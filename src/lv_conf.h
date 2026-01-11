@@ -501,7 +501,7 @@
 
 /** Default number of image header cache entries. The cache is used to store the headers of images
  *  The main logic is like `LV_CACHE_DEF_SIZE` but for image headers. */
-#define LV_IMAGE_HEADER_CACHE_DEF_CNT 0
+#define LV_IMAGE_HEADER_CACHE_DEF_CNT 10
 
 /** Number of stops allowed per gradient. Increase this to allow more stops.
  *  This adds (sizeof(lv_color_t) + 1) bytes per additional stop. */
@@ -938,21 +938,21 @@
 #define LV_USE_LIBPNG 1
 
 /** BMP decoder library */
-#define LV_USE_BMP 0
+#define LV_USE_BMP 1
 
 /** JPG + split JPG decoder library.
  *  Split JPG is a custom format optimized for embedded systems. */
-#define LV_USE_TJPGD 0
+#define LV_USE_TJPGD 1
 
 /** libjpeg-turbo decoder library.
  *  - Supports complete JPEG specifications and high-performance JPEG decoding. */
 #define LV_USE_LIBJPEG_TURBO 0
 
 /** GIF decoder library */
-#define LV_USE_GIF 0
+#define LV_USE_GIF 1
 #if LV_USE_GIF
     /** GIF decoder accelerate */
-    #define LV_GIF_CACHE_DECODE_DATA 0
+    #define LV_GIF_CACHE_DECODE_DATA 1
 #endif
 
 /** GStreamer library */

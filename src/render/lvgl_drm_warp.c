@@ -1,6 +1,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <time.h>
+#include <ui/actions_displayimg.h>
 #include <unistd.h>
 #include <string.h>
 #include <stdlib.h>
@@ -17,6 +18,7 @@
 #include "ui/actions_oplist.h"
 #include "prts/prts.h"
 #include "ui/battery.h"
+#include "ui/actions_displayimg.h"
 
 static uint32_t lvgl_drm_warp_tick_get_cb(void)
 {
@@ -137,6 +139,7 @@ void lvgl_drm_warp_init(lvgl_drm_warp_t *lvgl_drm_warp,drm_warpper_t *drm_warppe
     ui_warning_init();
     ui_oplist_init(prts);
     ui_battery_init();
+    ui_displayimg_init();
 
     lvgl_drm_warp->running = 1;
     pthread_create(&lvgl_drm_warp->lvgl_thread, NULL, lvgl_drm_warp_thread_entry, lvgl_drm_warp);

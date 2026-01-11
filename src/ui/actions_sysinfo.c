@@ -221,7 +221,7 @@ void action_format_sd_card(lv_event_t * e){
 }
 
 const char *get_var_epass_version(){
-    return EPASS_GIT_VERSION;
+    return APP_VERSION_STRING;
 }
 void set_var_epass_version(const char *value){
     return;
@@ -251,7 +251,7 @@ const char *get_var_sysinfo(){
         "%s"
         "%s%s",
         APP_SUBCODENAME,
-        EPASS_GIT_VERSION,
+        APP_VERSION_STRING,
         app_crc32,
         COMPILE_TIME,
         meminfo,

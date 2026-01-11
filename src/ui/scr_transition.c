@@ -14,6 +14,9 @@
 #include "ui/scr_transition.h"
 #include <ui/actions_displayimg.h>
 
+extern int g_running;
+extern int g_exitcode;
+
 static curr_screen_t g_cur_scr;
 
 // =========================================
@@ -119,17 +122,6 @@ void ui_schedule_screen_transition(curr_screen_t to_screen){
 
 }
 
-static void ui_top_fix_cb(void* userdata,bool is_last){
-    lv_display_t * disp = lv_display_get_default();
-    lvgl_drm_warp_t* lvgl_drm_warp = (lvgl_drm_warp_t*)lv_display_get_driver_data(disp);
-
-    int y = get_screen_target_y(g_cur_scr);
-
-    layer_animation_ease_in_out_move(
-        lvgl_drm_warp->layer_animation, 
-        DRM_WARPPER_LAYER_UI, 
-        0, y, 0, y, UI_LAYER_ANIMATION_DURATION / 2, 0);
-}
 
 bool ui_is_hidden(){
     return g_cur_scr == curr_screen_t_SCREEN_SPINNER;
@@ -160,8 +152,12 @@ void action_screen_loaded_cb(lv_event_t * e){
 
 // 全局按钮回调。主要用于屏幕切换时放过渡。 
 void screen_key_event_cb(uint32_t key){
-
     log_debug("screen_key_event_cb: g_cur_scr = %d, key = %d", g_cur_scr, key);
+
+    if(key == LV_KEY_END){
+        g_running = 0;
+        g_exitcode = EXITCODE_SHUTDOWN;
+    }
 
     // 展示扩列图 界面，按下3/4按钮都可关闭
     if (g_cur_scr == curr_screen_t_SCREEN_DISPLAYIMG){

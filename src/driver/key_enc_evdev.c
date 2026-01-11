@@ -20,6 +20,8 @@ static int key_enc_evdev_process_key(uint16_t code)
             return LV_KEY_ENTER;
         case KEY_4:
             return LV_KEY_ESC;
+        case KEY_0:
+            return LV_KEY_END;
         default:
             return 0;
     }
@@ -38,6 +40,9 @@ void print_lv_key_str(int key){
             break;
         case LV_KEY_ESC:
             log_debug("LV_KEY_ESC");
+            break;
+        case LV_KEY_END:
+            log_debug("LV_KEY_END");
             break;
         default:
             log_debug("unknown key: %d", key);

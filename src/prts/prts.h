@@ -89,7 +89,7 @@ typedef struct {
     spsc_bq_t req_queue;
 } prts_t;
 
-void prts_init(prts_t* prts,overlay_t* overlay);
+void prts_init(prts_t* prts,overlay_t* overlay,bool use_sd);
 void prts_destroy(prts_t* prts);
 
 void prts_log_parse_log(prts_t* prts,char* path,char* message,prts_parse_log_type_t type);

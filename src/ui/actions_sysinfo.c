@@ -10,6 +10,10 @@
 #include <ui/scr_transition.h>
 #include "ui/actions_warning.h"
 
+extern int g_running;
+extern int g_exitcode;
+extern bool g_use_sd;
+
 // =========================================
 // 自己添加的方法 START
 // =========================================
@@ -214,10 +218,8 @@ uint32_t ui_sysinfo_get_sd_total_size(){
 void action_format_sd_card(lv_event_t * e){
     lv_obj_t* obj = lv_event_get_target(e);
     lv_obj_remove_state(obj, LV_STATE_PRESSED);
-    log_debug("action_format_sd_card");
-    log_error("formatting SD card is not implemented");
-    ui_warning(UI_WARNING_NOT_IMPLEMENTED);
-    ui_schedule_screen_transition(curr_screen_t_SCREEN_SPINNER);
+    g_running = 0;
+    g_exitcode = EXITCODE_FORMAT_SD_CARD;
 }
 
 const char *get_var_epass_version(){
@@ -286,6 +288,9 @@ const char *get_var_sd_label(){
     static char buf[128];
     if(!ui_sysinfo_is_sdcard_inserted()){
         return "SD卡不存在";
+    }
+    if(!g_use_sd){
+        return "SD卡挂载失败";
     }
     snprintf(buf, sizeof(buf), 
         "%d/%dMB", 

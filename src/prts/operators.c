@@ -527,7 +527,7 @@ int prts_operator_scan_assets(prts_t *prts,char* dirpath){
     char path[128];
     DIR *dir = opendir(dirpath);
     if (!dir) {
-        prts_log_parse_log(prts, dirpath, "无法打开资源目录", PARSE_LOG_ERROR);
+        prts_log_parse_log(prts, dirpath, "unable to open assets directory", PARSE_LOG_ERROR);
         return 1;
     }
 
@@ -540,7 +540,7 @@ int prts_operator_scan_assets(prts_t *prts,char* dirpath){
             continue;
         }
         if (prts->operator_count >= PRTS_OPERATORS_MAX) {
-            prts_log_parse_log(prts, dirpath, "干员数量超过上限 PRTS_OPERATORS_MAX", PARSE_LOG_WARN);
+            prts_log_parse_log(prts, dirpath, "operator count exceeds maximum PRTS_OPERATORS_MAX", PARSE_LOG_WARN);
             break;
         }
 

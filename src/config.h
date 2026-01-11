@@ -32,6 +32,11 @@
 #define SETTINGS_VERSION 2
 #define SETTINGS_BRIGHTNESS_PATH "/sys/class/backlight/backlight/brightness"
 
+// ========== Storage Configuration ==========
+#define NAND_MOUNT_POINT "/"
+#define SD_MOUNT_POINT "/sd"
+#define SD_DEV_PATH "/dev/mmcblk0"
+
 // ========== PRTS Configuration ==========
 #define PRTS_OPERATORS_MAX 128
 #define PRTS_TIMER_MAX 1024
@@ -39,6 +44,7 @@
 #define PRTS_ASSET_VERSION_NUMBER 1
 #define PRTS_DEFAULT_ICON_PATH "A:/root/res/defaulticon.png"
 #define PRTS_ASSET_DIR "/assets/"
+#define PRTS_ASSET_DIR_SD SD_MOUNT_POINT "/assets/"
 #define PRTS_TICK_PERIOD (1000 * 1000)
 #define PRTS_FALLBACK_ASSET_DIR "/root/res/fallback/"
 
@@ -198,10 +204,6 @@
 #define UI_BATTERY_LOW_BAT_TRIP_THRESHOLD 6
 #define UI_BATTERY_TIMER_TICK_PERIOD (5 * 1000 * 1000) // 5s
 
-// ========== Storage Configuration ==========
-#define NAND_MOUNT_POINT "/"
-#define SD_MOUNT_POINT "/sd"
-#define SD_DEV_PATH "/dev/mmcblk0"
 
 // ========== System Information Configuration ==========
 #define SYSINFO_MEMINFO_PATH "/proc/meminfo"
@@ -224,7 +226,7 @@
 #define EXITCODE_RESTART_APP 1
 #define EXITCODE_APPSTART 2
 #define EXITCODE_SHUTDOWN 3
-
+#define EXITCODE_FORMAT_SD_CARD 4
 
 // ========== Display Image Configuration ==========
 #define DISPLAYIMG_MAX_COUNT 128

@@ -33,6 +33,7 @@ buffer_object_t g_video_buf;
 
 int g_running = 1;
 int g_exitcode = 0;
+bool g_use_sd = false;
 
 void signal_handler(int sig)
 {
@@ -80,7 +81,8 @@ int main(int argc, char *argv[]){
             printf("COMPILE_TIME: %s\n", COMPILE_TIME);
             return 0;
         }
-        else if(strcmp(argv[1], "aux") == 0){
+        else if(strcmp(argv[1], "sd") == 0){
+            g_use_sd = true;
         }
     }
 
@@ -154,7 +156,7 @@ int main(int argc, char *argv[]){
     overlay_init(&g_overlay, &g_drm_warpper, &g_layer_animation);
 
     // ============ PRTS 初始化===============
-    prts_init(&g_prts, &g_overlay);
+    prts_init(&g_prts, &g_overlay, g_use_sd);
 
 
     // ============ LVGL 初始化 ===============

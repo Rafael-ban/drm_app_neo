@@ -388,8 +388,7 @@ void prts_request_set_operator(prts_t* prts,int operator_index){
 }
 
 
-void prts_init(prts_t* prts, overlay_t* overlay){
-
+void prts_init(prts_t* prts, overlay_t* overlay, bool use_sd){
     log_info("==> PRTS Initializing...");
     prts->overlay = overlay;
     prts->parse_log_f = fopen(PRTS_OPERATOR_PARSE_LOG, "w");
@@ -399,6 +398,12 @@ void prts_init(prts_t* prts, overlay_t* overlay){
     prts->operator_count = 0;
 
     int errcnt = prts_operator_scan_assets(prts, PRTS_ASSET_DIR);
+
+    if(use_sd){
+        log_info("==> PRTS will scan SD assets directory: %s", PRTS_ASSET_DIR_SD);
+        errcnt += prts_operator_scan_assets(prts, PRTS_ASSET_DIR_SD);
+    }
+
     if(errcnt != 0){
         // 告警信号要等UI启动后才能发送，这里塞到定时器回调里
         prts_timer_handle_t warning_handle;

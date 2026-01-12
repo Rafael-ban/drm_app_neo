@@ -56,6 +56,26 @@ uint64_t get_now_us(void)
     return (long long)tv.tv_sec * 1000000ll + tv.tv_usec;
 }
 
+static void fill_nv12_buffer_with_color(uint8_t* buf, int width, int height, uint32_t rgb){
+    uint8_t r = (rgb >> 16) & 0xFF;
+    uint8_t g = (rgb >> 8) & 0xFF;
+    uint8_t b = rgb & 0xFF;
+    uint8_t y = (uint8_t)(0.299 * r + 0.587 * g + 0.114 * b);
+    uint8_t u = (uint8_t)(-0.168736 * r - 0.331264 * g + 0.5 * b + 128);
+    uint8_t v = (uint8_t)(0.5 * r - 0.418688 * g - 0.081312 * b + 128);
+    int y_size = width * height;
+    int uv_size = width * height / 2;
+
+    for(int i = 0; i < y_size; i++){
+        buf[i] = y;
+    }
+
+    for(int i = 0; i < uv_size; i += 2){
+        buf[y_size + i] = u;
+        buf[y_size + i + 1] = v;
+    }
+}
+
 // ============ 组件依赖关系： ============
 // UI 依赖 PRTS 扫描后生成干员列表
 // LayerAnimation 依赖 PRTS定时器 与 drm warpper
@@ -86,16 +106,19 @@ int main(int argc, char *argv[]){
         }
     }
 
+#ifdef APP_RELEASE
+    log_info("Release mode is enabled. Most debug logs are disabled.");
+    log_set_level_c(LOG_INFO);
+#endif // APP_RELEASE
+
     signal(SIGINT, signal_handler);
     signal(SIGTERM, signal_handler);
 
-    printf("APP_VERSION: %s\n", APP_VERSION_STRING);
-    printf("COMPILE_TIME: %s\n", COMPILE_TIME);
+    fprintf(stderr,"APP_VERSION: %s\n", APP_VERSION_STRING);
+    fprintf(stderr,"COMPILE_TIME: %s\n", COMPILE_TIME);
 
     fputs(APP_BARNER, stderr);
     log_info("==> Starting EPass DRM APP!");
-
-    usleep(3000000);
 
     // ============ DRM Warpper 初始化 ===============
     drm_warpper_init(&g_drm_warpper);
@@ -134,8 +157,15 @@ int main(int argc, char *argv[]){
     // mediaplayer_start(&g_mediaplayer);
 
     // ============ 缓冲素材 初始化 ===============
-    // 没错，我就是要用video层的buffer来缓存素材
-    cacheassets_init(&g_cacheassets, g_video_buf.vaddr, CACHED_ASSETS_MAX_SIZE);
+    // 原计划是用video层的buffer来缓存素材，但这样会导致第一次切换的时候闪烁，挺难看的...
+    // 单独开了一个buffer
+    uint8_t* cache_buf = malloc(CACHED_ASSETS_MAX_SIZE);
+    if(!cache_buf){
+        log_error("failed to allocate cache buffer");
+        drm_warpper_destroy(&g_drm_warpper);
+        return -1;
+    }
+    cacheassets_init(&g_cacheassets, cache_buf, CACHED_ASSETS_MAX_SIZE);
     cacheassets_put_asset(&g_cacheassets, CACHE_ASSETS_AK_BAR, CACHED_ASSETS_ASSET_PATH_AK_BAR);
     cacheassets_put_asset(&g_cacheassets, CACHE_ASSETS_BTM_LEFT_BAR, CACHED_ASSETS_ASSET_PATH_BTM_LEFT_BAR);
     cacheassets_put_asset(&g_cacheassets, CACHE_ASSETS_TOP_LEFT_RECT, CACHED_ASSETS_ASSET_PATH_TOP_LEFT_RECT);
@@ -158,6 +188,13 @@ int main(int argc, char *argv[]){
     // ============ PRTS 初始化===============
     prts_init(&g_prts, &g_overlay, g_use_sd);
 
+    // fix:根据第一个干员transition的颜色 先填充video buffer，防止闪烁。
+    fill_nv12_buffer_with_color(
+        g_video_buf.vaddr, 
+        VIDEO_WIDTH, 
+        VIDEO_HEIGHT, 
+        g_prts.operators[0].transition_in.background_color
+    );
 
     // ============ LVGL 初始化 ===============
     drm_warpper_init_layer(
@@ -189,5 +226,7 @@ int main(int argc, char *argv[]){
     mediaplayer_destroy(&g_mediaplayer);
     drm_warpper_destroy(&g_drm_warpper);
     settings_destroy(&g_settings);
+
+    free(cache_buf);    
     return g_exitcode;
 }

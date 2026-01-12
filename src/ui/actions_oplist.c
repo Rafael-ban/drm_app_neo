@@ -34,9 +34,9 @@ static void op_btn_click_cb(lv_event_t *e){
 // 来创建干员列表项。但是它startWidgetIndex是相对于eez的objects的。
 // 我们希望添加到自己的信息表里。因此，这里有一个非常，非常，非常，非常Dirty的hacks
 static void add_prts_operator_to_ui(prts_operator_entry_t* op,ui_oplist_entry_objs_t* objs){
-    log_debug("add_prts_operator_to_ui: op->operator_name = %s", op->operator_name);
-    log_debug("add_prts_operator_to_ui: op->description = %s", op->description);
-    log_debug("add_prts_operator_to_ui: op->icon_path = %s", op->icon_path);
+    // log_debug("add_prts_operator_to_ui: op->operator_name = %s", op->operator_name);
+    // log_debug("add_prts_operator_to_ui: op->description = %s", op->description);
+    // log_debug("add_prts_operator_to_ui: op->icon_path = %s", op->icon_path);
 
     //stolen from eez generated code.
     lv_obj_t *obj = lv_obj_create(objects.oplst_container);

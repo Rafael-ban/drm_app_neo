@@ -325,6 +325,7 @@ timer虽然给出了is_last字段用来处理释放问题，但是timer 回调�
 
 ## 直接嵌入的开源代码
 
+* [log](https://github.com/rxi/log.c) A minimal but powerful logging facility for C.
 * [stb](https://github.com/nothings/stb) single-file public domain libraries for C/C++
 * [code128](https://github.com/fhunleth/code128) barcode generator
 * [lvgl](https://github.com/lvgl/lvgl) Embedded graphics library to create beautiful UIs for any MCU, MPU and display type.

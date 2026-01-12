@@ -19,6 +19,7 @@
 #include "prts/prts.h"
 #include "ui/battery.h"
 #include "ui/actions_displayimg.h"
+#include "ui/actions_confirm.h"
 
 static uint32_t lvgl_drm_warp_tick_get_cb(void)
 {
@@ -140,6 +141,7 @@ void lvgl_drm_warp_init(lvgl_drm_warp_t *lvgl_drm_warp,drm_warpper_t *drm_warppe
     ui_oplist_init(prts);
     ui_battery_init();
     ui_displayimg_init();
+    ui_confirm_init();
 
     lvgl_drm_warp->running = 1;
     pthread_create(&lvgl_drm_warp->lvgl_thread, NULL, lvgl_drm_warp_thread_entry, lvgl_drm_warp);
@@ -155,4 +157,5 @@ void lvgl_drm_warp_destroy(lvgl_drm_warp_t *lvgl_drm_warp){
     key_enc_evdev_destroy(&lvgl_drm_warp->key_enc_evdev);
     ui_warning_destroy();
     ui_battery_destroy();
+    ui_confirm_destroy();
 }

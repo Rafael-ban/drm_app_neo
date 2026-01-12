@@ -3,7 +3,7 @@
 #include "config.h"
 #include <stdlib.h>
 
-static void log_settings(settings_t *settings){
+void log_settings(settings_t *settings){
     log_info("==> Settings Log <==");
     log_info("magic: %08lx", settings->magic);
     log_info("version: %d", settings->version);
@@ -56,7 +56,7 @@ static void settings_save(settings_t *settings){
     fclose(f);
 
     log_info("setting saved!");
-    log_settings(settings);
+    // log_settings(settings);
 }
 
 void settings_init(settings_t *settings){
@@ -76,7 +76,7 @@ void settings_init(settings_t *settings){
             fclose(f);
             set_brightness(settings->brightness);
             settings_set_usb_mode(settings->usb_mode);
-            log_settings(settings);
+            // log_settings(settings);
             pthread_mutex_init(&settings->mtx, NULL);
             return;
         }

@@ -3,6 +3,7 @@
 #include "ui/actions_mainscreen.h"
 #include "ui/scr_transition.h"
 #include "utils/log.h"
+#include "ui/actions_confirm.h"
 #include <stdlib.h>
 #include "config.h"
 
@@ -26,8 +27,7 @@ void action_restart_app(lv_event_t * e){
 
 void action_shutdown(lv_event_t * e){
     log_debug("action_shutdown");
-    g_running = 0;
-    g_exitcode = EXITCODE_SHUTDOWN;
+    ui_confirm(UI_CONFIRM_TYPE_SHUTDOWN);
 }
 
 void action_show_oplist(lv_event_t * e){

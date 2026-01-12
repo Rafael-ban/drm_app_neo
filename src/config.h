@@ -5,7 +5,7 @@
 #define APP_BARNER \
     "           =-+           \n" \
     "     +@@@@@  @@@@@@        Rhodes Island\n" \
-    "     +@*.:@@ @@  %@-       Electrnic Pass\n" \
+    "     +@*.:@@ @@  %@-       Electronic Pass\n" \
     "     *@@@%:  @@@@@=:       DRM System\n" \
     "   ==+@      @@  @@ .=   \n" \
     "  +                   *    CodeName:\n" \
@@ -19,12 +19,15 @@
     "基于f1c200s的明日方舟电子通行认证终端\n" \
     "白银+ChatGPT 5.2<inapp@iccmc.cc> 2026\n" \
     "https://github.com/rhodesepass\n" \
-    "电子通行证是我个人业余时间做的一款开源的自由硬件，" \
+    "电子通行证是白银个人业余时间设计的一款开源的自由硬件，" \
     "与鹰角网络没有任何直接或间接的关联。相关游戏素材版权属于鹰角网络。\n"\
-    "这是我对电子产业全流程的一次尝试，目的是学习项目管理。可能会有很多不足的地方，希望您能多多包涵。"
+    "本设计方案按“原样”提供，不附带任何形式的明示或默示担保。白银不对使用本设计方案造成的任何索赔、损害或其他责任承担责任。" \
+    "白银不参与本项目的任何商业活动，也不从中获取任何利益，亦无义务对本设计方案进行任何形式的维护或更新。"
 
 #define APP_VERSION "a2.1"
 #define APP_VERSION_STRING (APP_VERSION "_" EPASS_GIT_VERSION)
+
+#define APP_RELEASE
 
 // ========== Settings Configuration ==========
 #define SETTINGS_FILE_PATH "/root/epass_cfg.bin"
@@ -69,6 +72,7 @@
     #define UI_SPINNER_INTRO_Y 580
     #define UI_MAINMENU_Y 190
     #define UI_WARNING_Y 565
+    #define UI_CONFIRM_Y (UI_HEIGHT - 125)
 
 
 
@@ -202,7 +206,7 @@
 #define UI_BATTERY_LOW_BAT_WARNING_THRESHOLD 3
 // 低电压跳闸时间定值,单位tick
 #define UI_BATTERY_LOW_BAT_TRIP_THRESHOLD 6
-#define UI_BATTERY_TIMER_TICK_PERIOD (5 * 1000 * 1000) // 5s
+#define UI_BATTERY_TIMER_TICK_PERIOD (10 * 1000 * 1000) // 10s
 
 
 // ========== System Information Configuration ==========

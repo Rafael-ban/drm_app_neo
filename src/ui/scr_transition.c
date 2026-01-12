@@ -13,6 +13,7 @@
 #include "ui/actions_oplist.h"
 #include "ui/scr_transition.h"
 #include <ui/actions_displayimg.h>
+#include "ui/actions_confirm.h"
 
 extern int g_running;
 extern int g_exitcode;
@@ -33,6 +34,8 @@ inline static int get_screen_target_y(curr_screen_t screen){
             return UI_WARNING_Y;
         case curr_screen_t_SCREEN_SPINNER:
             return UI_HEIGHT;
+        case curr_screen_t_SCREEN_CONFIRM:
+            return UI_CONFIRM_Y;
         default:
             return 0;
     }
@@ -64,6 +67,9 @@ inline static void load_screen(curr_screen_t screen){
         case curr_screen_t_SCREEN_FILEMANAGER:
             loadScreen(SCREEN_ID_FILEMANAGER);
             break;
+        case curr_screen_t_SCREEN_CONFIRM:
+            loadScreen(SCREEN_ID_CONFIRM);
+            break;
     }
 }
 
@@ -83,7 +89,7 @@ void ui_schedule_screen_transition(curr_screen_t to_screen){
     prts_timer_handle_t timer_handle;
 
     // 从spinner 到 其他任何屏幕，(除告警页）都做二阶段动画
-    if(g_cur_scr == curr_screen_t_SCREEN_SPINNER && to_screen != curr_screen_t_SCREEN_WARNING){
+    if(g_cur_scr == curr_screen_t_SCREEN_SPINNER && to_screen != curr_screen_t_SCREEN_WARNING && to_screen != curr_screen_t_SCREEN_CONFIRM){
         prts_timer_create(
             &timer_handle, 
             UI_LAYER_ANIMATION_INTRO_LOADSCREEN_DELAY, 
@@ -155,8 +161,7 @@ void screen_key_event_cb(uint32_t key){
     log_debug("screen_key_event_cb: g_cur_scr = %d, key = %d", g_cur_scr, key);
 
     if(key == LV_KEY_END){
-        g_running = 0;
-        g_exitcode = EXITCODE_SHUTDOWN;
+        ui_confirm(UI_CONFIRM_TYPE_SHUTDOWN);
     }
 
     // 展示扩列图 界面，按下3/4按钮都可关闭

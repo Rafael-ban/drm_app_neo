@@ -87,7 +87,7 @@ static void *mp_parser_thread(void *param)
                                            (char **)&packet.buf, &packet.buflen,
                                            (char **)&packet.ringBuf, &packet.ringBufLen, 0);
             if (ret != 0) {
-                log_warn("RequestVideoStreamBuffer err, request=%d, valid=%d",
+                log_debug("RequestVideoStreamBuffer err, request=%d, valid=%d",
                           requestSize, validSize);
                 usleep(50 * 1000);
                 continue;
@@ -141,7 +141,7 @@ static void *mp_parser_thread(void *param)
     }
     
     if(CdxParserGetStatus(parser) == PSR_EOS){
-        log_info("eos, start again!");
+        log_debug("eos, start again!");
         CdxParserSeekTo(parser, 0, AW_SEEK_CLOSEST);  
         goto startagain;
     }

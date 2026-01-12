@@ -58,6 +58,7 @@ add_executable(epass_drm_app
   src/ui/actions_displayimg.c
   src/ui/actions_sysinfo.c
   src/ui/actions_oplist.c
+  src/ui/actions_confirm.c
 
 
   src/overlay/overlay.c
@@ -96,6 +97,7 @@ target_compile_definitions(epass_drm_app PRIVATE
 
 target_compile_options(epass_drm_app PRIVATE
   -Wall -Wextra -Wno-unused-parameter
+  -Wno-format-truncation
   -ffile-prefix-map=${CMAKE_SOURCE_DIR}/src/=/
    ${LIBEVDEV_CFLAGS_OTHER}
 )

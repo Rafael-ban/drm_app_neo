@@ -9,20 +9,18 @@
 #include <sys/statvfs.h>
 #include <ui/scr_transition.h>
 #include "ui/actions_warning.h"
+#include "ui/actions_confirm.h"
 
-extern int g_running;
-extern int g_exitcode;
 extern bool g_use_sd;
 
 // =========================================
 // 自己添加的方法 START
 // =========================================
 
-void ui_sysinfo_get_meminfo_str(char *ret, size_t ret_sz) {
-    FILE *fp = fopen("/proc/meminfo", "r");
+static int read_file_first_lines(char* path, char *ret, size_t ret_sz, int target_line_count){
+    FILE *fp = fopen(path, "r");
     if (!fp) {
-        snprintf(ret, ret_sz, "Meminfo: 读取失败");
-        return;
+        return -1;
     }
     char line[128];
     size_t used = 0;
@@ -32,7 +30,7 @@ void ui_sysinfo_get_meminfo_str(char *ret, size_t ret_sz) {
         for (size_t i = 0; i < len; i++) {
             if (line[i] == '\n') {
                 line_count++;
-                if (line_count > 2) {
+                if (line_count >= target_line_count) {
                     if (used + i + 1 < ret_sz) {
                         strcpy(ret + used, line);
                         goto end;
@@ -50,26 +48,21 @@ void ui_sysinfo_get_meminfo_str(char *ret, size_t ret_sz) {
     }
     end:
     fclose(fp);
+    return line_count;
+}
+
+void ui_sysinfo_get_meminfo_str(char *ret, size_t ret_sz) {
+    int line_count = read_file_first_lines("/proc/meminfo", ret, ret_sz, 3);
+    if (line_count < 0) {
+        snprintf(ret, ret_sz, "meminfo: read failed");
+    }    
 }
 
 void ui_sysinfo_get_os_release_str(char *ret, size_t ret_sz) {
-    FILE *fp = fopen("/etc/os-release", "r");
-    if (!fp) {
-        snprintf(ret, ret_sz, "os-release: 读取失败");
-        return;
+    int line_count = read_file_first_lines("/etc/os-release", ret, ret_sz, 2);
+    if (line_count < 0) {
+        snprintf(ret, ret_sz, "os-release: read failed");
     }
-    char line[128];
-    size_t used = 0;
-    while (fgets(line, sizeof(line), fp)) {
-        size_t len = strlen(line);
-        if (used + len + 1 < ret_sz) {
-            strcpy(ret + used, line);
-            used += len;
-        } else {
-            break;
-        }
-    }
-    fclose(fp);
 }
 
 
@@ -218,8 +211,7 @@ uint32_t ui_sysinfo_get_sd_total_size(){
 void action_format_sd_card(lv_event_t * e){
     lv_obj_t* obj = lv_event_get_target(e);
     lv_obj_remove_state(obj, LV_STATE_PRESSED);
-    g_running = 0;
-    g_exitcode = EXITCODE_FORMAT_SD_CARD;
+    ui_confirm(UI_CONFIRM_TYPE_FORMAT_SD_CARD);
 }
 
 const char *get_var_epass_version(){

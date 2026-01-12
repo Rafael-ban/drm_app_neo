@@ -10,7 +10,7 @@
  *    - define `LV_CONF_INCLUDE_SIMPLE`;
  *    - add the path as an include path.
  */
-
+#include "config.h"
 /* clang-format off */
 #if 1 /* Set this to "1" to enable content */
 
@@ -410,7 +410,11 @@
  *-----------*/
 
 /** Enable log module */
-#define LV_USE_LOG 1
+#ifdef APP_RELEASE
+    #define LV_USE_LOG 0
+#else
+    #define LV_USE_LOG 1
+#endif
 #if LV_USE_LOG
     /** Set value to one of the following levels of logging detail:
      *  - LV_LOG_LEVEL_TRACE    Log detailed information.
@@ -652,7 +656,7 @@
 /** Enable handling large font and/or fonts with a lot of characters.
  *  The limit depends on the font size, font face and bpp.
  *  A compiler error will be triggered if a font needs it. */
-#define LV_FONT_FMT_TXT_LARGE 0
+#define LV_FONT_FMT_TXT_LARGE 1
 
 /** Enables/disables support for compressed fonts. */
 #define LV_USE_FONT_COMPRESSED 0
@@ -1041,7 +1045,11 @@
 #define LV_USE_SNAPSHOT 0
 
 /** 1: Enable system monitor component */
-#define LV_USE_SYSMON   1
+#ifdef APP_RELEASE
+    #define LV_USE_SYSMON 0
+#else
+    #define LV_USE_SYSMON 1
+#endif
 #if LV_USE_SYSMON
     /** Get the idle percentage. E.g. uint32_t my_get_idle(void); */
     #define LV_SYSMON_GET_IDLE lv_os_get_idle_percent

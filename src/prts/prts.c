@@ -259,34 +259,23 @@ static void schedule_video_and_transitions(prts_t* prts,prts_video_t* video,oltr
 }
 
 
-static void switch_operator(prts_t* prts,int target_index){
-    static bool is_first_switch = true;
+typedef struct {
+    prts_t* prts;
+    int target_index;
+    prts_operator_entry_t* target_operator;
+    bool *is_first_switch;
+    bool on_heap;
+} switch_operator_secound_stage_data_t;
 
-    prts_operator_entry_t* target_operator = &prts->operators[target_index];
-    prts_operator_entry_t* curr_operator = &prts->operators[prts->operator_index];
+static void switch_operator_secound_stage(void* userdata,bool is_last){
+    switch_operator_secound_stage_data_t* data = (switch_operator_secound_stage_data_t*)userdata;
+    prts_t* prts = data->prts;
+    int target_index = data->target_index;
+    prts_operator_entry_t* target_operator = data->target_operator;
+    bool is_first_switch = *data->is_first_switch;
 
-    prts_state_t curr_state = prts->state;
+
     prts_state_t next_state = PRTS_STATE_IDLE;
-
-    if(curr_state != PRTS_STATE_IDLE){
-        log_error("switch_operator: prts is not idle?? curr_state: %d", curr_state);
-        return;
-    }
-
-    log_info("switching operator from %s to %s", curr_operator->operator_name, target_operator->operator_name);
-
-    // 卸载当前干员。此时overlay播放消失动画，但是mediaplayer还在运行。
-    if(!is_first_switch){
-        overlay_abort(prts->overlay);
-        overlay_opinfo_free_image(&curr_operator->opinfo_params);
-        overlay_transition_free_image(&curr_operator->transition_in);
-        overlay_transition_free_image(&curr_operator->transition_loop);
-    }
-
-    // 加载新干员
-    overlay_transition_load_image(&target_operator->transition_in);
-    overlay_transition_load_image(&target_operator->transition_loop);
-    overlay_opinfo_load_image(&target_operator->opinfo_params);
 
     // 第一步。 存在intro video，且闭锁入场动画软压板没投
     // 则做全量 transition_in -> intro video -> transition_loop -> loop video
@@ -312,8 +301,62 @@ static void switch_operator(prts_t* prts,int target_index){
 
     prts->last_switch_time = get_now_us();
     prts->operator_index = target_index;
-    is_first_switch = false;
+    *data->is_first_switch = false;
     prts->state = next_state;
+
+    if(data->on_heap){
+        free(data);
+    }
+
+}
+
+static void switch_operator(prts_t* prts,int target_index){
+    static bool is_first_switch = true;
+
+    prts_operator_entry_t* target_operator = &prts->operators[target_index];
+    prts_operator_entry_t* curr_operator = &prts->operators[prts->operator_index];
+
+
+    if(prts->state != PRTS_STATE_IDLE){
+        log_error("switch_operator: prts is not idle?? curr_state: %d", prts->state);
+        return;
+    }
+
+    log_info("switching operator from %s to %s", curr_operator->operator_name, target_operator->operator_name);
+
+    // 卸载当前干员。此时overlay播放消失动画，但是mediaplayer还在运行。
+    if(!is_first_switch){
+        overlay_abort(prts->overlay);
+        overlay_opinfo_free_image(&curr_operator->opinfo_params);
+        overlay_transition_free_image(&curr_operator->transition_in);
+        overlay_transition_free_image(&curr_operator->transition_loop);
+    }
+
+    switch_operator_secound_stage_data_t *data = malloc(sizeof(switch_operator_secound_stage_data_t));
+    data->prts = prts;
+    data->target_index = target_index;
+    data->target_operator = target_operator;
+    data->is_first_switch = &is_first_switch;
+    data->on_heap = true;
+
+    // 先排期 overlay_abort结束后的操作（第二阶段）
+    // 一旦调用第二阶段的schedule代码 就会立刻把buffer覆盖。
+    // 我们要等overlay先结束之后 再进入第二阶段。
+    prts_timer_handle_t timer_handle;
+    prts_timer_create(
+        &timer_handle, 
+        UI_LAYER_ANIMATION_DURATION, 
+        0, 
+        1, 
+        switch_operator_secound_stage, 
+        (void*)data
+    );
+    
+    // 加载新干员
+    overlay_transition_load_image(&target_operator->transition_in);
+    overlay_transition_load_image(&target_operator->transition_loop);
+    overlay_opinfo_load_image(&target_operator->opinfo_params);
+
 }
 
 
@@ -360,11 +403,10 @@ static void prts_tick_cb(void* userdata,bool is_last){
         return;
     }
 
-
     // 由 时间触发
     if(target_operator_index == -1){
         if(!ui_is_hidden()){
-            log_info("switch_operator: ui is not hidden, skip switch");
+            log_warn("switch_operator: ui is not hidden, skip switch");
             settings_unlock(&g_settings);
             return;
         }
@@ -433,9 +475,11 @@ void prts_init(prts_t* prts, overlay_t* overlay, bool use_sd){
 
     for(int i = 0; i < prts->operator_count; i++){
         prts->operators[i].index = i;
+#ifndef APP_RELEASE
         log_debug("========================");
         log_debug("operator[%d]:", i);
         prts_operator_log_entry(&prts->operators[i]);
+#endif // APP_RELEASE
     }
 
     spsc_bq_init(&prts->req_queue, 10);

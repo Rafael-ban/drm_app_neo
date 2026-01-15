@@ -4,12 +4,19 @@ include(FetchContent)
 
 find_package(Git REQUIRED)
 execute_process(
-    COMMAND ${GIT_EXECUTABLE} describe --tags --always --dirty
+    COMMAND ${GIT_EXECUTABLE} describe --tags --dirty
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-    OUTPUT_VARIABLE GIT_VERSION
+    OUTPUT_VARIABLE GIT_TAG
     OUTPUT_STRIP_TRAILING_WHITESPACE
 )
-message(STATUS "Git version: ${GIT_VERSION}")
+execute_process(
+    COMMAND ${GIT_EXECUTABLE} rev-parse --short HEAD
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    OUTPUT_VARIABLE GIT_COMMIT
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+message(STATUS "Git tag: ${GIT_TAG}")
+message(STATUS "Git commit: ${GIT_COMMIT}")
 
 # set(CMAKE_C_STANDARD 11)
 # set(CMAKE_C_STANDARD_REQUIRED ON)
@@ -91,7 +98,8 @@ string(TIMESTAMP COMPILE_TIME "%Y-%m-%d %H:%M:%S")
 
 
 target_compile_definitions(epass_drm_app PRIVATE 
- EPASS_GIT_VERSION="${GIT_VERSION}"
+ EPASS_GIT_VERSION="${GIT_COMMIT}"
+ EPASS_GIT_TAG="${GIT_TAG}"
  COMPILE_TIME="${COMPILE_TIME}"
 )
 

@@ -66,7 +66,6 @@ void create_filemanager(){
         return;
     }
 
-    lv_obj_set_style_text_font(root, &lv_font_montserrat_16, LV_PART_MAIN);
 
     lv_obj_clean(root);
 

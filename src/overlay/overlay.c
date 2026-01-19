@@ -61,12 +61,12 @@ void* overlay_worker_thread(void* arg){
     overlay_t* overlay = (overlay_t*)arg;
     overlay_worker_t* worker = &overlay->worker;
     log_info("==> Overlay Worker Thread Started!");
-    while(worker->running){
+    while(atomic_load(&worker->running)){
         pthread_mutex_lock(&worker->mutex);
 
         while(!worker->pending){
             pthread_cond_wait(&worker->cond, &worker->mutex);
-            if(!worker->running){
+            if(!atomic_load(&worker->running)){
                 goto worker_end;
             }
         }
@@ -140,15 +140,21 @@ int overlay_init(overlay_t* overlay,drm_warpper_t* drm_warpper,layer_animation_t
     overlay->drm_warpper = drm_warpper;
     overlay->layer_animation = layer_animation;
 
-    overlay->worker.running = 1;
-    pthread_create(&overlay->worker.thread, NULL, overlay_worker_thread, overlay);
+    atomic_store(&overlay->worker.running, 1);
+    if (pthread_create(&overlay->worker.thread, NULL, overlay_worker_thread, overlay) != 0) {
+        log_error("Failed to create overlay worker thread");
+        atomic_store(&overlay->worker.running, 0);
+        drm_warpper_free_buffer(drm_warpper, DRM_WARPPER_LAYER_OVERLAY, &overlay->overlay_buf_1);
+        drm_warpper_free_buffer(drm_warpper, DRM_WARPPER_LAYER_OVERLAY, &overlay->overlay_buf_2);
+        return -1;
+    }
 
     log_info("==> Overlay Initalized!");
     return 0;
 }
 
 int overlay_destroy(overlay_t* overlay){
-    overlay->worker.running = 0;
+    atomic_store(&overlay->worker.running, 0);
     pthread_cond_signal(&overlay->worker.cond);
     pthread_join(overlay->worker.thread, NULL);
     drm_warpper_free_buffer(overlay->drm_warpper, DRM_WARPPER_LAYER_OVERLAY, &overlay->overlay_buf_1);

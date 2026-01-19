@@ -1,12 +1,16 @@
 #pragma once
 
+#include "config.h"
+
+#if HAVE_CEDARX
+
 #include "cdx_config.h"
 #include <CdxParser.h>
 #include <vdecoder.h>
 #include <memoryAdapter.h>
 #include <stdint.h>
 #include <pthread.h>
-#include "config.h"
+#include <stdatomic.h>
 #include "driver/drm_warpper.h"
 
 /* fixed output frame size */
@@ -41,9 +45,9 @@ typedef struct {
 
     char                 input_uri[256];
     char                 video_path[256];
-    int                  running;
+    atomic_int           running;
     int                  framerate;
-    
+
     drm_warpper_t       *drm_warpper;
 } mediaplayer_t;
 
@@ -73,3 +77,33 @@ int mediaplayer_start(mediaplayer_t *mediaplayer);
 
 /* get current status: "stopped", "playing", */
 mp_status_t mediaplayer_get_status(mediaplayer_t *mediaplayer);
+
+#else /* !HAVE_CEDARX */
+
+/* Cedarx not available - provide stub definitions */
+#include "driver/drm_warpper.h"
+
+typedef struct {
+    int dummy;
+    drm_warpper_t *drm_warpper;
+} mediaplayer_t;
+
+typedef enum {
+    MP_STATUS_PLAYING,
+    MP_STATUS_STOPPED,
+    MP_STATUS_ERROR,
+} mp_status_t;
+
+/* Stub functions when Cedarx is not available */
+static inline int mediaplayer_init(mediaplayer_t *mp, drm_warpper_t *drm) {
+    mp->drm_warpper = drm;
+    return 0;
+}
+static inline int mediaplayer_destroy(mediaplayer_t *mp) { (void)mp; return 0; }
+static inline int mediaplayer_stop(mediaplayer_t *mp) { (void)mp; return 0; }
+static inline int mediaplayer_set_video(mediaplayer_t *mp, const char *p) { (void)mp; (void)p; return -1; }
+static inline int mediaplayer_start(mediaplayer_t *mp) { (void)mp; return -1; }
+static inline int mediaplayer_play_video(mediaplayer_t *mp, const char *f) { (void)mp; (void)f; return -1; }
+static inline mp_status_t mediaplayer_get_status(mediaplayer_t *mp) { (void)mp; return MP_STATUS_STOPPED; }
+
+#endif /* HAVE_CEDARX */

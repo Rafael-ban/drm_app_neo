@@ -69,7 +69,7 @@ static void* drm_warpper_display_thread(void *arg){
 
     log_info("==> DRM_Warpper Display Thread Started!");
 
-    while(drm_warpper->thread_running){
+    while(atomic_load(&drm_warpper->thread_running)){
         drm_warpper_wait_for_vsync(drm_warpper);
         // log_info("vsync");
         commit_req.size = 0;
@@ -180,23 +180,43 @@ int drm_warpper_init(drm_warpper_t *drm_warpper){
     ret = drmSetClientCap(drm_warpper->fd, DRM_CLIENT_CAP_ATOMIC, 1);
     if(ret) {
         log_error("No atomic modesetting support: %s", strerror(errno));
+        close(drm_warpper->fd);
         return -1;
     }
-    
+
     drm_warpper->res = drmModeGetResources(drm_warpper->fd);
+    if (!drm_warpper->res || drm_warpper->res->count_crtcs == 0 || drm_warpper->res->count_connectors == 0) {
+        log_error("drmModeGetResources failed or no CRTCs/connectors");
+        close(drm_warpper->fd);
+        return -1;
+    }
     drm_warpper->crtc_id = drm_warpper->res->crtcs[0];
     drm_warpper->conn_id = drm_warpper->res->connectors[0];
-    
-    drmSetClientCap(drm_warpper->fd, DRM_CLIENT_CAP_UNIVERSAL_PLANES, 1);
+
     ret = drmSetClientCap(drm_warpper->fd, DRM_CLIENT_CAP_UNIVERSAL_PLANES, 1);
     if (ret) {
       log_error("failed to set client cap\n");
+      drmModeFreeResources(drm_warpper->res);
+      close(drm_warpper->fd);
       return -1;
     }
     drm_warpper->plane_res = drmModeGetPlaneResources(drm_warpper->fd);
+    if (!drm_warpper->plane_res) {
+        log_error("drmModeGetPlaneResources failed");
+        drmModeFreeResources(drm_warpper->res);
+        close(drm_warpper->fd);
+        return -1;
+    }
     log_info("Available Plane Count: %d", drm_warpper->plane_res->count_planes);
 
     drm_warpper->conn = drmModeGetConnector(drm_warpper->fd, drm_warpper->conn_id);
+    if (!drm_warpper->conn) {
+        log_error("drmModeGetConnector failed");
+        drmModeFreePlaneResources(drm_warpper->plane_res);
+        drmModeFreeResources(drm_warpper->res);
+        close(drm_warpper->fd);
+        return -1;
+    }
 
     log_info("Connector Name: %s, %dx%d, Refresh Rate: %d",
         drm_warpper->conn->modes[0].name, drm_warpper->conn->modes[0].vdisplay, drm_warpper->conn->modes[0].hdisplay,
@@ -207,8 +227,15 @@ int drm_warpper_init(drm_warpper_t *drm_warpper){
 
     drm_warpper_reset_cache_ioctl(drm_warpper);
 
-    drm_warpper->thread_running = true;
-    pthread_create(&drm_warpper->display_thread, NULL, drm_warpper_display_thread, drm_warpper);
+    atomic_store(&drm_warpper->thread_running, 1);
+    if (pthread_create(&drm_warpper->display_thread, NULL, drm_warpper_display_thread, drm_warpper) != 0) {
+        log_error("Failed to create display thread");
+        drmModeFreeConnector(drm_warpper->conn);
+        drmModeFreePlaneResources(drm_warpper->plane_res);
+        drmModeFreeResources(drm_warpper->res);
+        close(drm_warpper->fd);
+        return -1;
+    }
     return 0;
 }
 
@@ -217,7 +244,7 @@ int drm_warpper_destroy(drm_warpper_t *drm_warpper){
     drmModeFreePlaneResources(drm_warpper->plane_res);
     drmModeFreeResources(drm_warpper->res);
     close(drm_warpper->fd);
-    drm_warpper->thread_running = false;
+    atomic_store(&drm_warpper->thread_running, 0);
     for(int i = 0; i < 4; i++){
         drm_warpper_destroy_layer(drm_warpper, i);
     }

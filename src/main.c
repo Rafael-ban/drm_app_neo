@@ -45,8 +45,6 @@ void signal_handler(int sig)
 void mount_video_layer_callback(void *userdata,bool is_last){
     drm_warpper_mount_layer(&g_drm_warpper, DRM_WARPPER_LAYER_VIDEO, 0, 0, &g_video_buf);
     drm_warpper_set_layer_coord(&g_drm_warpper, DRM_WARPPER_LAYER_OVERLAY, 0,0);
-    drm_warpper_set_layer_coord(&g_drm_warpper, DRM_WARPPER_LAYER_OVERLAY, 0,0);
-
 }
 
 uint64_t get_now_us(void)

@@ -2,6 +2,7 @@
 #include "driver/drm_warpper.h"
 #include "render/layer_animation.h"
 #include <pthread.h>
+#include <stdatomic.h>
 #include "utils/timer.h"
 
 typedef enum {
@@ -14,7 +15,7 @@ typedef struct {
     pthread_mutex_t mutex;
     pthread_cond_t cond;
 
-    int running;
+    atomic_int running;
 
     int in_progress;
     int pending;

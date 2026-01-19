@@ -50,9 +50,15 @@ void settings_set_usb_mode(usb_mode_t usb_mode){
 
 static void settings_save(settings_t *settings){
     FILE *f = fopen(SETTINGS_FILE_PATH, "wb");
+    if (!f) {
+        log_error("Failed to open settings file for writing");
+        return;
+    }
     settings->magic = SETTINGS_MAGIC;
     settings->version = SETTINGS_VERSION;
-    fwrite(settings, SETTINGS_LENGTH, 1, f);
+    if (fwrite(settings, SETTINGS_LENGTH, 1, f) != 1) {
+        log_error("Failed to write settings");
+    }
     fclose(f);
 
     log_info("setting saved!");

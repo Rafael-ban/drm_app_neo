@@ -4,6 +4,7 @@
 #include "driver/drm_warpper.h"
 #include <prts/prts.h>
 #include <pthread.h>
+#include <stdatomic.h>
 #include "render/layer_animation.h"
 #include "driver/key_enc_evdev.h"
 
@@ -25,7 +26,7 @@ typedef struct {
     key_enc_evdev_t key_enc_evdev;
 
     pthread_t lvgl_thread;
-    int running;
+    atomic_int running;
 
 } lvgl_drm_warp_t;
 

@@ -2,6 +2,7 @@
 
 #include <stdlib.h>
 #include <errno.h>
+#include <unistd.h>
 
 int spsc_bq_init(spsc_bq_t *q, size_t capacity)
 {
@@ -51,6 +52,12 @@ void spsc_bq_destroy(spsc_bq_t *q)
     pthread_cond_broadcast(&q->not_empty);
     pthread_cond_broadcast(&q->not_full);
     pthread_mutex_unlock(&q->mtx);
+
+    // 根据 POSIX pthread_cond_destroy 文档：
+    // "Attempting to destroy a condition variable upon which other threads
+    //  are currently blocked results in undefined behavior."
+    // 等待一小段时间让等待线程有机会从 cond_wait 返回
+    usleep(10 * 1000);  // 10ms
 
     pthread_cond_destroy(&q->not_empty);
     pthread_cond_destroy(&q->not_full);

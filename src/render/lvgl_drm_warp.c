@@ -63,7 +63,7 @@ static void* lvgl_drm_warp_thread_entry(void *arg){
     lvgl_drm_warp_t *lvgl_drm_warp = (lvgl_drm_warp_t *)arg;
     log_info("==> LVGL Thread Started!");
     loadScreen(SCREEN_ID_SPINNER);
-    while(lvgl_drm_warp->running){
+    while(atomic_load(&lvgl_drm_warp->running)){
         uint32_t idle_time = lv_timer_handler();
         ui_tick();
         usleep(idle_time * 1000);
@@ -143,8 +143,12 @@ void lvgl_drm_warp_init(lvgl_drm_warp_t *lvgl_drm_warp,drm_warpper_t *drm_warppe
     ui_displayimg_init();
     ui_confirm_init();
 
-    lvgl_drm_warp->running = 1;
-    pthread_create(&lvgl_drm_warp->lvgl_thread, NULL, lvgl_drm_warp_thread_entry, lvgl_drm_warp);
+    atomic_store(&lvgl_drm_warp->running, 1);
+    if (pthread_create(&lvgl_drm_warp->lvgl_thread, NULL, lvgl_drm_warp_thread_entry, lvgl_drm_warp) != 0) {
+        log_error("Failed to create LVGL thread");
+        atomic_store(&lvgl_drm_warp->running, 0);
+        return;
+    }
     log_info("==> LVGL warpper Initalized!");
 }
 
@@ -152,7 +156,7 @@ void lvgl_drm_warp_destroy(lvgl_drm_warp_t *lvgl_drm_warp){
     drm_warpper_free_buffer(lvgl_drm_warp->drm_warpper, DRM_WARPPER_LAYER_UI, &lvgl_drm_warp->ui_buf_1);
     drm_warpper_free_buffer(lvgl_drm_warp->drm_warpper, DRM_WARPPER_LAYER_UI, &lvgl_drm_warp->ui_buf_2);
 
-    lvgl_drm_warp->running = 0;
+    atomic_store(&lvgl_drm_warp->running, 0);
     pthread_join(lvgl_drm_warp->lvgl_thread, NULL);
     key_enc_evdev_destroy(&lvgl_drm_warp->key_enc_evdev);
     ui_warning_destroy();

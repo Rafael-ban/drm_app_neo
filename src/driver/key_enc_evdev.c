@@ -112,6 +112,7 @@ lv_indev_t * key_enc_evdev_init(key_enc_evdev_t * key_enc_evdev){
 
     if(fcntl(key_enc_evdev->evdev_fd, F_SETFL, O_NONBLOCK) < 0) {
         log_error("fcntl failed: %d", errno);
+        close(key_enc_evdev->evdev_fd);
         return NULL;
     }
 

@@ -4,6 +4,7 @@
 #include <semaphore.h>
 #include <pthread.h>
 #include <stdbool.h>
+#include <stdatomic.h>
 
 #include "utils/spsc_queue.h"
 #include "driver/srgn_drm.h"
@@ -57,7 +58,7 @@ typedef struct {
   layer_t layer[4]; // 4 layers
   drmVBlank blank;
   pthread_t display_thread;
-  int thread_running;
+  atomic_int thread_running;
 } drm_warpper_t;
 
 

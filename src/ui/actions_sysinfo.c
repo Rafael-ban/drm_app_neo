@@ -31,17 +31,19 @@ static int read_file_first_lines(char* path, char *ret, size_t ret_sz, int targe
             if (line[i] == '\n') {
                 line_count++;
                 if (line_count >= target_line_count) {
-                    if (used + i + 1 < ret_sz) {
-                        strcpy(ret + used, line);
+                    if (used + len < ret_sz) {
+                        memcpy(ret + used, line, len);
+                        ret[used + len] = '\0';
                         goto end;
                     }
                     break;
                 }
             }
         }
-        if (used + len + 1 < ret_sz) {
-            strcpy(ret + used, line);
+        if (used + len < ret_sz) {
+            memcpy(ret + used, line, len);
             used += len;
+            ret[used] = '\0';
         } else {
             break;
         }

@@ -321,7 +321,7 @@ int mediaplayer_init(mediaplayer_t *mp,drm_warpper_t *drm_warpper)
     mp->thread.end_of_stream = 0;
     mp->thread.state = 0;
     mp->thread.requested_stop = 0;
-    mp->running = 0;
+    atomic_store(&mp->running, 0);
     memset(mp->video_path, 0, sizeof(mp->video_path));
 
     mp->drm_warpper = drm_warpper;
@@ -356,7 +356,7 @@ int mediaplayer_play_video(mediaplayer_t *mp, const char *file)
         return -1;
     }
 
-    if (mp->running) {
+    if (atomic_load(&mp->running)) {
         log_error("mediaplayer is running");
         return -1;
     }
@@ -448,11 +448,11 @@ int mediaplayer_play_video(mediaplayer_t *mp, const char *file)
     mp->thread.requested_stop = 0;
     pthread_rwlock_unlock(&mp->thread.rwlock);
 
-    mp->running = 1;
+    atomic_store(&mp->running, 1);
 
     if (pthread_create(&mp->parser_thread, NULL, mp_parser_thread, mp) != 0) {
         log_error("parser create err");
-        mp->running = 0;
+        atomic_store(&mp->running, 0);
         mp_cleanup_internal(mp);
         return -1;
     }
@@ -463,7 +463,7 @@ int mediaplayer_play_video(mediaplayer_t *mp, const char *file)
         mp->thread.requested_stop = 1;
         pthread_rwlock_unlock(&mp->thread.rwlock);
         pthread_join(mp->parser_thread, NULL);
-        mp->running = 0;
+        atomic_store(&mp->running, 0);
         mp_cleanup_internal(mp);
         return -1;
     }
@@ -500,7 +500,7 @@ int mediaplayer_stop(mediaplayer_t *mp)
         return -1;
     }
 
-    if (!mp->running) {
+    if (!atomic_load(&mp->running)) {
         return 0;
     }
 
@@ -510,7 +510,7 @@ int mediaplayer_stop(mediaplayer_t *mp)
 
     pthread_join(mp->parser_thread, NULL);
     pthread_join(mp->decoder_thread, NULL);
-    mp->running = 0;
+    atomic_store(&mp->running, 0);
 
     mp_cleanup_internal(mp);
     
@@ -540,7 +540,7 @@ int mediaplayer_set_video(mediaplayer_t *mp, const char *path)
         return -1;
     }
 
-    if (mp->running) {
+    if (atomic_load(&mp->running)) {
         log_error("cannot set video while playing, stop first");
         return -1;
     }
@@ -559,7 +559,7 @@ int mediaplayer_start(mediaplayer_t *mp)
         return -1;
     }
 
-    if (mp->running) {
+    if (atomic_load(&mp->running)) {
         log_warn("mediaplayer already running");
         return 0;
     }
@@ -655,11 +655,11 @@ int mediaplayer_start(mediaplayer_t *mp)
     mp->thread.requested_stop = 0;
     pthread_rwlock_unlock(&mp->thread.rwlock);
 
-    mp->running = 1;
+    atomic_store(&mp->running, 1);
 
     if (pthread_create(&mp->parser_thread, NULL, mp_parser_thread, mp) != 0) {
         log_error("parser create err");
-        mp->running = 0;
+        atomic_store(&mp->running, 0);
         mp_cleanup_internal(mp);
         return -1;
     }
@@ -670,7 +670,7 @@ int mediaplayer_start(mediaplayer_t *mp)
         mp->thread.requested_stop = 1;
         pthread_rwlock_unlock(&mp->thread.rwlock);
         pthread_join(mp->parser_thread, NULL);
-        mp->running = 0;
+        atomic_store(&mp->running, 0);
         mp_cleanup_internal(mp);
         return -1;
     }
@@ -685,7 +685,7 @@ mp_status_t mediaplayer_get_status(mediaplayer_t *mp)
         return MP_STATUS_ERROR;
     }
 
-    if (!mp->running) {
+    if (!atomic_load(&mp->running)) {
         return MP_STATUS_STOPPED;
     }
 

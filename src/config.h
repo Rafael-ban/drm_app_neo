@@ -16,7 +16,7 @@
     "           =:=        \n"
 
 #define APP_ABOUT_MSG \
-    "基于Cedar/LVGL和一点寄存器魔法的电子通行证播放程序\n" \
+    "基于LVGL和寄存器魔法的方舟通行证展示程序\n" \
     "电子通行证 Contributers 2026 GPLV3\n" \
     "白银 伊卡洛斯sama 薄云 Et al.\n" \
     "https://github.com/rhodesepass\n" \

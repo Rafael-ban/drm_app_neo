@@ -17,6 +17,7 @@
 #include "utils/timer.h"
 #include "utils/cacheassets.h"
 #include "prts/prts.h"
+#include "utils/misc.h"
 
 /* global variables */
 drm_warpper_t g_drm_warpper;
@@ -47,32 +48,6 @@ void mount_video_layer_callback(void *userdata,bool is_last){
     drm_warpper_set_layer_coord(&g_drm_warpper, DRM_WARPPER_LAYER_OVERLAY, 0,0);
 }
 
-uint64_t get_now_us(void)
-{
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
-    return (long long)tv.tv_sec * 1000000ll + tv.tv_usec;
-}
-
-static void fill_nv12_buffer_with_color(uint8_t* buf, int width, int height, uint32_t rgb){
-    uint8_t r = (rgb >> 16) & 0xFF;
-    uint8_t g = (rgb >> 8) & 0xFF;
-    uint8_t b = rgb & 0xFF;
-    uint8_t y = (uint8_t)(0.299 * r + 0.587 * g + 0.114 * b);
-    uint8_t u = (uint8_t)(-0.168736 * r - 0.331264 * g + 0.5 * b + 128);
-    uint8_t v = (uint8_t)(0.5 * r - 0.418688 * g - 0.081312 * b + 128);
-    int y_size = width * height;
-    int uv_size = width * height / 2;
-
-    for(int i = 0; i < y_size; i++){
-        buf[i] = y;
-    }
-
-    for(int i = 0; i < uv_size; i += 2){
-        buf[y_size + i] = u;
-        buf[y_size + i + 1] = v;
-    }
-}
 
 // ============ 组件依赖关系： ============
 // UI 依赖 PRTS 扫描后生成干员列表

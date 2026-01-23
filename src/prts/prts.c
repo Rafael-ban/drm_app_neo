@@ -18,9 +18,9 @@
 #include "vars.h"
 #include "render/mediaplayer.h"
 #include "ui/scr_transition.h"
+#include "utils/misc.h"
 
 extern settings_t g_settings;
-extern uint64_t get_now_us(void);
 void prts_log_parse_log(prts_t* prts,char* path,char* message,prts_parse_log_type_t type){
     if(prts->parse_log_f == NULL){
         return;

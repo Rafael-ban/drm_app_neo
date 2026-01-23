@@ -16,11 +16,11 @@
 #include "cdx_config.h"
 #include "config.h"
 #include "driver/srgn_drm.h"
+#include "utils/misc.h"
 
 /* external cedarx plugin entry */
 extern void AddVDPlugin(void);
 
-extern uint64_t get_now_us(void);
 #define mp_get_now_us get_now_us
 
 /* parser thread: read bitstream and feed decoder */

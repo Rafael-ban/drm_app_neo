@@ -70,6 +70,9 @@ inline static void load_screen(curr_screen_t screen){
         case curr_screen_t_SCREEN_CONFIRM:
             loadScreen(SCREEN_ID_CONFIRM);
             break;
+        case curr_screen_t_SCREEN_APPLIST:
+            loadScreen(SCREEN_ID_APPLIST);
+            break;
     }
 }
 

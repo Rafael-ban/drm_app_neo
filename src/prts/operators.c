@@ -108,7 +108,7 @@ static int parse_transition_obj(
 }
 
 
-int prts_operator_try_load(prts_t *prts,prts_operator_entry_t* operator,char * path){
+int prts_operator_try_load(prts_t *prts,prts_operator_entry_t* operator,char * path,prts_source_t source,int index){
     if (!path || strlen(path) == 0) {
         return -1;
     }
@@ -117,6 +117,8 @@ int prts_operator_try_load(prts_t *prts,prts_operator_entry_t* operator,char * p
         return -1;
     }
     memset(operator, 0, sizeof(*operator));
+    operator->index = index;
+    operator->source = source;
     operator->opinfo_params.type = OPINFO_TYPE_NONE;
     operator->transition_in.type = TRANSITION_TYPE_NONE;
     operator->transition_in.background_color = 0xFF000000u;
@@ -364,7 +366,7 @@ int prts_operator_try_load(prts_t *prts,prts_operator_entry_t* operator,char * p
     return 0;
 }
 
-int prts_operator_scan_assets(prts_t *prts,char* dirpath){
+int prts_operator_scan_assets(prts_t *prts,char* dirpath,prts_source_t source){
     int error_cnt = 0;
     char path[128];
     DIR *dir = opendir(dirpath);
@@ -387,7 +389,7 @@ int prts_operator_scan_assets(prts_t *prts,char* dirpath){
         }
 
         snprintf(path, sizeof(path), "%s/%s", dirpath, entry->d_name);
-        if (prts_operator_try_load(prts, &prts->operators[prts->operator_count], path) == 0) {
+        if (prts_operator_try_load(prts, &prts->operators[prts->operator_count], path, source, prts->operator_count) == 0) {
             prts->operator_count++;
         }
         else{

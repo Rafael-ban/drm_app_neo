@@ -11,10 +11,12 @@
 
 typedef struct {
     lv_obj_t *container;  // 外层容器对象
+    // 请注意：以下顺序和EEZ保持一致！
     lv_obj_t *opbtn;
     lv_obj_t *oplogo;
     lv_obj_t *opdesc;
     lv_obj_t *opname;
+    lv_obj_t *sd_flag;
     int operator_index;   // 该槽位当前显示的干员索引，-1 表示未使用
 } ui_oplist_entry_objs_t;
 

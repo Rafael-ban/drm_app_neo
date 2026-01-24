@@ -6,6 +6,7 @@
 #include "ui/actions_confirm.h"
 #include <stdlib.h>
 #include "config.h"
+#include "vars.h"
 
 // =========================================
 // 自己添加的方法 START
@@ -53,6 +54,12 @@ void action_show_files(lv_event_t * e){
     lv_obj_t* obj = lv_event_get_target(e);
     lv_obj_remove_state(obj, LV_STATE_PRESSED);
     ui_schedule_screen_transition(curr_screen_t_SCREEN_FILEMANAGER);
+}
+void action_show_apps(lv_event_t *e){
+    log_debug("action_show_apps");
+    lv_obj_t* obj = lv_event_get_target(e);
+    lv_obj_remove_state(obj, LV_STATE_PRESSED);
+    ui_schedule_screen_transition(curr_screen_t_SCREEN_APPLIST);
 }
 
 // 严格来说 它不是mainscreen的回调

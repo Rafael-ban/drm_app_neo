@@ -95,6 +95,13 @@ static void update_slot_content(int slot_idx, int operator_idx) {
     lv_label_set_text(slot->opdesc, op->description);
     lv_image_set_src(slot->oplogo, op->icon_path);
 
+    // SD标记可见性
+    if(op->source == PRTS_SOURCE_NAND){
+        lv_obj_add_flag(slot->sd_flag, LV_OBJ_FLAG_HIDDEN);
+    } else {
+        lv_obj_remove_flag(slot->sd_flag, LV_OBJ_FLAG_HIDDEN);
+    }
+
     // 移除旧的事件回调，添加新的
     lv_obj_remove_event_cb(slot->opbtn, op_btn_click_cb);
     lv_obj_add_event_cb(slot->opbtn, op_btn_click_cb, LV_EVENT_PRESSED, (void*)(intptr_t)operator_idx);
@@ -131,7 +138,6 @@ static void update_visible_range(int new_start) {
 }
 
 // 焦点变化回调 - encoder导航驱动的虚拟滚动
-// 伊卡洛斯sama是笨蛋，每次添加新代码都不好好测试!笨蛋!!
 static void oplist_focus_cb(lv_event_t *e) {
     // 防止递归调用（refocus_to_operator会触发新的FOCUSED事件）
     if (g_scroll_in_progress) return;

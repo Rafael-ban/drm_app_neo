@@ -29,6 +29,11 @@ typedef struct {
     int duration;
 } prts_video_t;
 
+typedef enum {
+    PRTS_SOURCE_NAND = 0,
+    PRTS_SOURCE_SD = 1,
+} prts_source_t;
+
 typedef struct {
     int index;
     char operator_name[40];
@@ -36,7 +41,8 @@ typedef struct {
     char description[256];
     char icon_path[128];
     display_type_t disp_type;
-
+    prts_source_t source;
+    
     prts_video_t intro_video;
     prts_video_t loop_video;
 
@@ -45,8 +51,6 @@ typedef struct {
     oltr_params_t transition_loop;
 
 } prts_operator_entry_t;
-
-
 
 typedef enum {
     PRTS_REQUEST_NONE = 0,

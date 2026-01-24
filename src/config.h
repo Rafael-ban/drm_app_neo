@@ -42,7 +42,7 @@
 #define SD_DEV_PATH "/dev/mmcblk0"
 
 // ========== PRTS Configuration ==========
-#define PRTS_OPERATORS_MAX 128
+#define PRTS_OPERATORS_MAX 256
 #define PRTS_TIMER_MAX 1024
 #define PRTS_OPERATOR_PARSE_LOG "/root/asset.log"
 #define PRTS_ASSET_VERSION_NUMBER 1

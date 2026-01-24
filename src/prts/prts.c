@@ -222,6 +222,16 @@ static void schedule_video_and_transitions_end_cb(void* userdata,bool is_last){
     prts->state = next_state;
 }
 
+static oltr_params_t first_transition_params = {
+    .type = TRANSITION_TYPE_MOVE,
+    .duration = 500 * 1000,
+    .image_path = "",
+    .image_w = 0,
+    .image_h = 0,
+    .image_addr = NULL,
+    .background_color = 0xFF000000u,
+};
+
 static void schedule_video_and_transitions(prts_t* prts,prts_video_t* video,oltr_params_t* transition,bool is_first_transition){
     oltr_callback_t* callback = malloc(sizeof(oltr_callback_t));
 
@@ -234,10 +244,11 @@ static void schedule_video_and_transitions(prts_t* prts,prts_video_t* video,oltr
 
     // 第一次发生过渡时 有两个问题:
     // 1. 需要挂载视频图层（用mount_video_layer_callback）
-    // 2. 不能使用fade过渡，否则有bug（强制用swipe）
+    // 2. 不能使用fade过渡，否则有bug（强制用move）
+    // 3. swipe会需要手动填充像素，不太适合刚开机的情况。
     if(is_first_transition){
         callback->middle_cb = set_video_mount_layer_cb;
-        overlay_transition_swipe(prts->overlay, callback, transition);
+        overlay_transition_move(prts->overlay, callback, &first_transition_params);
     }
     else{
         callback->middle_cb = set_video_cb;
@@ -439,11 +450,11 @@ void prts_init(prts_t* prts, overlay_t* overlay, bool use_sd){
     }
     prts->operator_count = 0;
 
-    int errcnt = prts_operator_scan_assets(prts, PRTS_ASSET_DIR);
+    int errcnt = prts_operator_scan_assets(prts, PRTS_ASSET_DIR,PRTS_SOURCE_NAND);
 
     if(use_sd){
         log_info("==> PRTS will scan SD assets directory: %s", PRTS_ASSET_DIR_SD);
-        errcnt += prts_operator_scan_assets(prts, PRTS_ASSET_DIR_SD);
+        errcnt += prts_operator_scan_assets(prts, PRTS_ASSET_DIR_SD,PRTS_SOURCE_SD);
     }
 
     if(errcnt != 0){
@@ -469,18 +480,18 @@ void prts_init(prts_t* prts, overlay_t* overlay, bool use_sd){
             delayed_warning_cb, 
             (void *)UI_WARNING_NO_ASSETS
         );
-        prts_operator_try_load(prts, &prts->operators[0], PRTS_FALLBACK_ASSET_DIR);
+        prts_operator_try_load(prts, &prts->operators[0], PRTS_FALLBACK_ASSET_DIR, PRTS_SOURCE_NAND, 0);
         prts->operator_count = 1;
     }
 
-    for(int i = 0; i < prts->operator_count; i++){
-        prts->operators[i].index = i;
 #ifndef APP_RELEASE
+    for(int i = 0; i < prts->operator_count; i++){
         log_debug("========================");
         log_debug("operator[%d]:", i);
         prts_operator_log_entry(&prts->operators[i]);
-#endif // APP_RELEASE
     }
+#endif // APP_RELEASE
+
 
     spsc_bq_init(&prts->req_queue, 10);
 

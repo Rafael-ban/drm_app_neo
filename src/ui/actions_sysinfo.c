@@ -10,6 +10,7 @@
 #include <ui/scr_transition.h>
 #include "ui/actions_warning.h"
 #include "ui/actions_confirm.h"
+#include "utils/misc.h"
 
 extern bool g_use_sd;
 
@@ -162,16 +163,6 @@ uint32_t ui_sysinfo_get_file_crc32(const char *path) {
 }
 
 
-
-bool ui_sysinfo_is_sdcard_inserted(){
-    FILE *f = fopen(SD_DEV_PATH, "r");
-    if(f == NULL){
-        return false;
-    }
-    fclose(f);
-    return true;
-}
-
 uint64_t ui_sysinfo_get_nand_available_size(){
     struct statvfs stat;
     if(statvfs(NAND_MOUNT_POINT, &stat) != 0){
@@ -308,7 +299,7 @@ void set_var_nand_label(const char *value){
 const char *get_var_sd_label(){
     static char buf[128];
     char used_str[32], total_str[32];
-    if(!ui_sysinfo_is_sdcard_inserted()){
+    if(!is_sdcard_inserted()){
         return "SD卡不存在";
     }
     if(!g_use_sd){
@@ -338,7 +329,7 @@ void set_var_nand_percent(int32_t value){
     return;
 }
 int32_t get_var_sd_percent(){
-    if(!ui_sysinfo_is_sdcard_inserted()){
+    if(!is_sdcard_inserted()){
         return 0;
     }
     uint64_t avail = ui_sysinfo_get_sd_available_size();

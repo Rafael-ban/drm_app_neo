@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <ui/actions_warning.h>
 #include <unistd.h>
 #include <stdint.h>
 #include <signal.h>
@@ -80,8 +81,7 @@ int main(int argc, char *argv[]){
     }
 
 #ifdef APP_RELEASE
-    log_info("Release mode is enabled. Most debug logs are disabled.");
-    log_set_level_c(LOG_INFO);
+    log_warn("Release mode is enabled. Most logs are disabled.");
 #endif // APP_RELEASE
 
     signal(SIGINT, signal_handler);
@@ -181,8 +181,12 @@ int main(int argc, char *argv[]){
     // drm_warpper_set_layer_coord(&g_drm_warpper, DRM_WARPPER_LAYER_UI, 0, SCREEN_HEIGHT);
     // drm_warpper_set_layer_coord(&g_drm_warpper, DRM_WARPPER_LAYER_OVERLAY, OVERLAY_WIDTH, 0);
 
-    
+    // 如果SD卡插入，但没有启用SD模式，则应该是mount出错了，这边告警
+    if(is_sdcard_inserted() && !g_use_sd){
+        ui_warning(UI_WARNING_SD_MOUNT_ERROR);
+    }
 
+    ui_warning_custom("我喜欢你", "你喜欢我我喜欢你", UI_ICON_HEART, UI_COLOR_OK);
 
     // ============ 主循环 ===============
     // does nothing, stuck here until signal is received

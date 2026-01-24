@@ -36,6 +36,18 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release CACHE STRING "Build type" FORCE)
+  set(APP_RELEASE ON CACHE BOOL "Build type" FORCE)
+  message(STATUS "No build type specified, defaulting to release mode.")
+else()
+  if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    set(APP_RELEASE OFF CACHE BOOL "Build type" FORCE)
+    message(STATUS "App is building in debug mode.")
+  elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
+    set(APP_RELEASE ON CACHE BOOL "Build type" FORCE)
+    message(STATUS "App is building in release mode.")
+  else()
+    message(FATAL_ERROR "Invalid build type: ${CMAKE_BUILD_TYPE}")
+  endif()
 endif()
 
 # ============================================================================
@@ -124,6 +136,7 @@ target_include_directories(epass_drm_app PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/lvgl
   ${CMAKE_CURRENT_SOURCE_DIR}/src
   ${CMAKE_CURRENT_SOURCE_DIR}/eez_design/src/ui
+  ${CMAKE_CURRENT_SOURCE_DIR}/eez_design/icon_header_gen
   ${LIBDRM_INCLUDE_DIRS}
   ${PNG_INCLUDE_DIR}
 )
@@ -156,7 +169,13 @@ target_compile_options(epass_drm_app PRIVATE
   -Wno-format-truncation
   -ffile-prefix-map=${CMAKE_SOURCE_DIR}/src/=/
   ${LIBEVDEV_CFLAGS_OTHER}
+  $<$<BOOL:${APP_RELEASE}>:-DAPP_RELEASE>
 )
+
+target_compile_options(lvgl PRIVATE
+  $<$<BOOL:${APP_RELEASE}>:-DAPP_RELEASE>
+)
+
 
 # ============================================================================
 # 链接库

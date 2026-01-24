@@ -1,4 +1,5 @@
 #pragma once
+#include "icons.h"
 
 // ========== Application Information ==========
 #define APP_SUBCODENAME "proj0cpy"
@@ -27,8 +28,6 @@
 
 #define APP_VERSION EPASS_GIT_TAG
 #define APP_VERSION_STRING (APP_VERSION "_" EPASS_GIT_VERSION)
-
-#define APP_RELEASE
 
 // ========== Settings Configuration ==========
 #define SETTINGS_FILE_PATH "/root/epass_cfg.bin"
@@ -186,6 +185,11 @@
 #define UI_WARNING_TIMER_TICK_PERIOD (200 * 1000)
 #define UI_WARNING_DISPLAY_DURATION (3 * 1000 * 1000)
 
+#define UI_COLOR_ERROR 0xffb93030
+#define UI_COLOR_WARNING 0xff8b7200
+#define UI_COLOR_INFO 0xff646464 // 我不是故意的
+#define UI_COLOR_OK 0xff0d6802
+
 // ========== Battery Configuration ==========
 #define UI_BATTERY_ADC_PATH "/sys/bus/iio/devices/iio:device0/in_voltage0_raw"
 #define UI_BATTERY_EMPTY_VALUE 2140
@@ -196,12 +200,12 @@
 #define UI_BATTERY_CHARGING_VALUE 2600
 #define UI_BATTERY_PADDING 10
 #define UI_BATTERY_SIZE 30
-#define UI_BATTERY_EMPTY_CHAR "\uf244"
-#define UI_BATTERY_FULL_CHAR "\uf240"
-#define UI_BATTERY_1_4_CHAR "\uf243"
-#define UI_BATTERY_1_2_CHAR "\uf242"
-#define UI_BATTERY_3_4_CHAR "\uf241"
-#define UI_BATTERY_CHARGING_CHAR "\uf0e7"
+#define UI_BATTERY_EMPTY_CHAR UI_ICON_BATTERY_EMPTY
+#define UI_BATTERY_FULL_CHAR UI_ICON_BATTERY_FULL
+#define UI_BATTERY_1_4_CHAR UI_ICON_BATTERY_QUARTER
+#define UI_BATTERY_1_2_CHAR UI_ICON_BATTERY_HALF
+#define UI_BATTERY_3_4_CHAR UI_ICON_BATTERY_THREE_QUARTERS
+#define UI_BATTERY_CHARGING_CHAR UI_ICON_BOLT
 
 // 低电压告警时间定值,单位tick
 #define UI_BATTERY_LOW_BAT_WARNING_THRESHOLD 3

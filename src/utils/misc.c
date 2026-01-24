@@ -11,6 +11,7 @@
 #include <sys/time.h>
 #include "utils/cJSON.h"
 #include "utils/misc.h"
+#include "config.h"
 
 uint64_t get_now_us(void){
     struct timeval tv;
@@ -188,4 +189,14 @@ int is_hex_color_6(const char *s) {
         if (!isxdigit((unsigned char)c)) return 0;
     }
     return 1;
+}
+
+
+bool is_sdcard_inserted(){
+    FILE *f = fopen(SD_DEV_PATH, "r");
+    if(f == NULL){
+        return false;
+    }
+    fclose(f);
+    return true;
 }

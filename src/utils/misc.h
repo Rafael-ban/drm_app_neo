@@ -19,3 +19,4 @@ int json_get_int(cJSON *obj, const char *key, int def) ;
 bool json_get_bool(cJSON *obj, const char *key, bool def) ;
 uint32_t parse_rgbff(const char *hex) ;
 int is_hex_color_6(const char *s) ;
+bool is_sdcard_inserted();

@@ -10,7 +10,6 @@
  *    - define `LV_CONF_INCLUDE_SIMPLE`;
  *    - add the path as an include path.
  */
-#include "config.h"
 /* clang-format off */
 #if 1 /* Set this to "1" to enable content */
 

@@ -38,9 +38,6 @@ void prts_log_parse_log(prts_t* prts,char* path,char* message,prts_parse_log_typ
     fflush(prts->parse_log_f);
 }
 
-static void delayed_warning_cb(void* userdata,bool is_last){
-    ui_warning((warning_type_t)userdata);
-}
 
 
 inline static bool should_switch_by_interval(prts_t* prts){
@@ -458,28 +455,13 @@ void prts_init(prts_t* prts, overlay_t* overlay, bool use_sd){
     }
 
     if(errcnt != 0){
-        // 告警信号要等UI启动后才能发送，这里塞到定时器回调里
-        prts_timer_handle_t warning_handle;
-        prts_timer_create(&warning_handle, 
-            5 * 1000 * 1000, 
-            0, 
-            1, 
-            delayed_warning_cb, 
-            (void *)UI_WARNING_ASSET_ERROR
-        );
+        ui_warning(UI_WARNING_ASSET_ERROR);
         log_warn("failed to load assets, error count: %d", errcnt);
     }
 
     if(prts->operator_count == 0){
         log_warn("no assets loaded, using fallback");
-        prts_timer_handle_t warning_handle;
-        prts_timer_create(&warning_handle, 
-            5 * 1000 * 1000, 
-            0, 
-            1, 
-            delayed_warning_cb, 
-            (void *)UI_WARNING_NO_ASSETS
-        );
+        ui_warning(UI_WARNING_NO_ASSETS);
         prts_operator_try_load(prts, &prts->operators[0], PRTS_FALLBACK_ASSET_DIR, PRTS_SOURCE_NAND, 0);
         prts->operator_count = 1;
     }

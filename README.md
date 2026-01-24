@@ -54,7 +54,16 @@ graph TD
 
 1. 拉取上文提到的buildroot,按repo中readme编译一次 编译工具链及依赖库
 2. 运行source ./output/host/environment-setup 将生成的工具链和依赖设置为默认工具链和依赖
-3. 在本repo目录下运行cmake . && make,若正常则终端显示此日志且本repo目录中出现epass_drm_app二进制文件
+3. 在本repo目录下:
+```bash
+mkdir build
+cd build
+cmake .. # 以release模式编译，或
+cmake -DCMAKE_BUILD_TYPE=Debug .. # 以debug模式编译
+make
+```
+
+若正常则终端显示此日志且build目录中出现epass_drm_app二进制文件
 
 ```
 [100%] Built target epass_drm_app

@@ -205,6 +205,12 @@ int apps_try_launch_by_file(apps_t *apps, const char *working_dir,
     if (app->type == APP_TYPE_BACKGROUND) {
         log_info("launch app foreground: %s,file: %s", app->executable_path,
                 file_full_path);
+
+        if(app->pid != -1){
+            ui_warning(UI_WARNING_APP_ALREADY_RUNNING);
+            return -1;
+        }
+        
         int pid = launch_app_background(app_basename, app->app_dir, file_full_path);
         if (pid > 0) {
             app->pid = pid;

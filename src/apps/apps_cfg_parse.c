@@ -9,6 +9,7 @@
 #include <apps/extmap.h>
 #include <dirent.h>
 #include <stdlib.h>
+#include <sys/stat.h>
 
 
 int apps_cfg_try_load(apps_t *apps,app_entry_t* app,char * app_dir,app_source_t source,int index){
@@ -89,6 +90,21 @@ int apps_cfg_try_load(apps_t *apps,app_entry_t* app,char * app_dir,app_source_t 
         cJSON_Delete(json);
         return -1;
     }
+
+    // 验证可执行文件存在
+    if (!file_exists_readable(exec_file)) {
+        parse_log_file(apps->parse_log_f, app_dir, "可执行文件不存在", PARSE_LOG_ERROR);
+        cJSON_Delete(json);
+        return -1;
+    }
+
+    // 添加执行权限
+    if (chmod(exec_file, 0755) != 0) {
+        parse_log_file(apps->parse_log_f, app_dir, "添加执行权限失败", PARSE_LOG_ERROR);
+        cJSON_Delete(json);
+        return -1;
+    }
+
     // 解析type
     const char* type = json_get_string(json, "type");
     if (type && type[0] != '\0') {

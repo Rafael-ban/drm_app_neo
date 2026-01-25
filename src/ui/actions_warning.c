@@ -43,6 +43,8 @@ inline static char *get_warning_title(warning_type_t type){
             return "APP不支持直接启动";
         case UI_WARNING_APP_LOAD_ERROR:
             return "部分APP加载失败";
+        case UI_WARNING_APP_ALREADY_RUNNING:
+            return "APP已经在后台运行";
         default:
             return "未知错误";
     }
@@ -66,6 +68,8 @@ inline static char *get_warning_desc(warning_type_t type){
             return "请通过文件管理器选择此APP支持的文件";
         case UI_WARNING_APP_LOAD_ERROR:
             return "请根据日志检查APP配置文件是否正确";
+        case UI_WARNING_APP_ALREADY_RUNNING:
+            return "此APP已在后台运行，可在应用列表界面关闭。";
         default:
             return "为什么你能看到这个告警页面？";
     }
@@ -89,6 +93,8 @@ inline static char *get_warning_icon(warning_type_t type){
             return UI_ICON_TRIANGLE_EXCLAMATION;
         case UI_WARNING_APP_LOAD_ERROR:
             return UI_ICON_TRIANGLE_EXCLAMATION;
+        case UI_WARNING_APP_ALREADY_RUNNING:
+            return UI_ICON_CAR_BURST;
         default:
             return UI_ICON_QUESTION;
     }
@@ -111,6 +117,8 @@ inline static uint32_t get_warning_color(warning_type_t type){
         case UI_WARNING_APP_NO_DIRECT_START:
             return UI_COLOR_WARNING;
         case UI_WARNING_APP_LOAD_ERROR:
+            return UI_COLOR_WARNING;
+        case UI_WARNING_APP_ALREADY_RUNNING:
             return UI_COLOR_WARNING;
         default:
             return UI_COLOR_INFO;

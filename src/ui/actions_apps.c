@@ -51,7 +51,6 @@ static void app_btn_click_cb(lv_event_t *e) {
         return;
     }
     else if (app->type == APP_TYPE_BACKGROUND){
-        // 后台应用，直接启动
         apps_toggle_bg_app_by_index(g_ui_apps.apps, app_idx);
         ui_schedule_screen_transition(curr_screen_t_SCREEN_SPINNER);
         return;

@@ -1,3 +1,4 @@
+#include <apps/apps_types.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <time.h>
@@ -74,7 +75,7 @@ static void* lvgl_drm_warp_thread_entry(void *arg){
 
 
 extern void screen_key_event_cb(uint32_t key);
-void lvgl_drm_warp_init(lvgl_drm_warp_t *lvgl_drm_warp,drm_warpper_t *drm_warpper,layer_animation_t *layer_animation,prts_t *prts){
+void lvgl_drm_warp_init(lvgl_drm_warp_t *lvgl_drm_warp,drm_warpper_t *drm_warpper,layer_animation_t *layer_animation,prts_t *prts,apps_t *apps){
 
     lvgl_drm_warp->drm_warpper = drm_warpper;
     lvgl_drm_warp->layer_animation = layer_animation;
@@ -134,7 +135,7 @@ void lvgl_drm_warp_init(lvgl_drm_warp_t *lvgl_drm_warp,drm_warpper_t *drm_warppe
 
     // gui_app_create_ui(lvgl_drm_warp);
     ui_init();
-    create_filemanager();
+    create_filemanager(apps);
 
     // UI 连锁 组件
     ui_warning_init();

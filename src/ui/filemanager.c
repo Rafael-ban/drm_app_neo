@@ -9,6 +9,7 @@
 
 #include "config.h"
 #include "utils/log.h"
+#include "apps/apps.h"
 
 extern objects_t objects;
 
@@ -37,30 +38,19 @@ static void file_explorer_event_handler(lv_event_t * e)
 
     if(!cur_path || !sel_fn || sel_fn[0] == '\0') return;
 
-    char full_path[512];
-    lv_snprintf(full_path, sizeof(full_path), "%s%s", cur_path, sel_fn);
+    const char *path_without_prefix = strip_lv_fs_prefix(cur_path);
 
-    const char * abs_path = strip_lv_fs_prefix(full_path);
-
-    FILE * fp = fopen("/tmp/appstart", "w");
-    if(!fp) {
-        log_error("unable to write to /tmp/appstart???: %s", strerror(errno));
+    apps_t *apps = (apps_t *)lv_obj_get_user_data(fe);
+    if(!apps){
+        log_error("apps is NULL");
         return;
     }
 
-    fprintf(fp, "chmod +x %s\n", abs_path);
-    fprintf(fp, "%s\n", abs_path);
-    fflush(fp);
-    fsync(fileno(fp));
-    fclose(fp);
-
-    log_info("/tmp/appstart written: %s", abs_path);
-    g_exitcode = EXITCODE_APPSTART;
-    g_running = 0;
+    apps_try_launch_by_file(apps, path_without_prefix, sel_fn);
 }
 
 static lv_obj_t * fe;
-void create_filemanager(){
+void create_filemanager(apps_t *apps){
     lv_obj_t *root = objects.file_container;
     if(!root) {
         return;
@@ -73,6 +63,7 @@ void create_filemanager(){
     fe = lv_file_explorer_create(root);
     lv_obj_set_style_bg_color(fe, lv_color_hex(0xf2f1f6), 0);
 
+    lv_obj_set_user_data(fe, apps);
 
     lv_obj_set_size(fe, LV_PCT(100), LV_PCT(100));
     lv_obj_center(fe);

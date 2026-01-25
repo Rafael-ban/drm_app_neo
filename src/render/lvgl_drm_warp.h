@@ -7,7 +7,7 @@
 #include <stdatomic.h>
 #include "render/layer_animation.h"
 #include "driver/key_enc_evdev.h"
-
+#include "apps/apps_types.h"
 typedef struct {
     drm_warpper_t *drm_warpper;
     layer_animation_t *layer_animation;
@@ -30,6 +30,6 @@ typedef struct {
 
 } lvgl_drm_warp_t;
 
-void lvgl_drm_warp_init(lvgl_drm_warp_t *lvgl_drm_warp,drm_warpper_t *drm_warpper,layer_animation_t *layer_animation,prts_t* prts);
+void lvgl_drm_warp_init(lvgl_drm_warp_t *lvgl_drm_warp,drm_warpper_t *drm_warpper,layer_animation_t *layer_animation,prts_t* prts,apps_t *apps);
 void lvgl_drm_warp_destroy(lvgl_drm_warp_t *lvgl_drm_warp);
 void lvgl_drm_warp_tick(lvgl_drm_warp_t *lvgl_drm_warp);

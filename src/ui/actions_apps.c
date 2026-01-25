@@ -16,7 +16,7 @@
 #include "apps/apps_types.h"
 
 ui_apps_t g_ui_apps;
-
+static lv_timer_t *g_ui_apps_timer = NULL;
 // =========================================
 // 自己添加的方法 START
 // =========================================
@@ -51,6 +51,7 @@ static void app_btn_click_cb(lv_event_t *e) {
         return;
     }
     else if (app->type == APP_TYPE_BACKGROUND){
+        // 后台应用，直接启动
         apps_toggle_bg_app_by_index(g_ui_apps.apps, app_idx);
         ui_schedule_screen_transition(curr_screen_t_SCREEN_SPINNER);
         return;
@@ -202,6 +203,10 @@ static void apps_focus_cb(lv_event_t *e) {
 
 // lvgl 定时器回调，更新当前slot的 后台程序 是否在运行
 static void ui_apps_timer_cb(lv_timer_t * timer){
+    // 防御性检查：如果 apps 已经被销毁，直接返回
+    if (g_ui_apps.apps == NULL) {
+        return;
+    }
     for (int i = 0; i < UI_APP_VISIBLE_SLOTS; i++) {
         int app_idx = g_ui_apps.slots[i].app_index;
         if (app_idx >= 0) {
@@ -250,7 +255,7 @@ void ui_apps_init(apps_t *apps){
         }
     }
 
-    g_ui_apps.timer = lv_timer_create(ui_apps_timer_cb, APPS_BG_APP_CHECK_PERIOD / 1000, NULL);
+    g_ui_apps_timer = lv_timer_create(ui_apps_timer_cb, APPS_BG_APP_CHECK_PERIOD / 1000, NULL);
 
     log_info("apps->ui sync complete! Created %d slots for %d apps",
              UI_APP_VISIBLE_SLOTS, apps->app_count);
@@ -271,7 +276,12 @@ void add_applist_btn_to_group() {
 }
 
 void ui_apps_destroy(){
-    lv_timer_delete(g_ui_apps.timer);
+    if (g_ui_apps_timer != NULL) {
+        lv_timer_delete(g_ui_apps_timer);
+        g_ui_apps_timer = NULL;
+    }
+    // 将 apps 指针设置为 NULL，防止定时器回调访问已销毁的数据
+    g_ui_apps.apps = NULL;
 }
 
 // =========================================

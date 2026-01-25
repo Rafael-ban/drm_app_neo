@@ -1,6 +1,5 @@
 #pragma once
 #include <apps/apps_types.h>
-
 #include "prts/prts.h"
 #include "lvgl.h"
 
@@ -25,7 +24,6 @@ typedef struct {
     ui_apps_entry_objs_t slots[UI_APP_VISIBLE_SLOTS];  // 固定槽位
     int total_count;        // 
     int visible_start;      // 当前可见区域起始索引
-    lv_timer_t * timer;
 } ui_apps_t;
 
 

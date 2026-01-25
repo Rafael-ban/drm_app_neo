@@ -7,9 +7,12 @@
 #include <errno.h>
 #include <signal.h>
 #include <stdlib.h>
+#include <sys/wait.h>
 #include <ui/actions_warning.h>
 #include <unistd.h>
 #include <utils/misc.h>
+#include "apps/ipc_common.h"
+#include "apps/ipc_server.h"
 
 static void apps_bg_app_check_timer_cb(void *userdata, bool is_last) {
     apps_t *apps = (apps_t *)userdata;
@@ -29,6 +32,7 @@ static void apps_bg_app_check_timer_cb(void *userdata, bool is_last) {
 }
 
 int apps_init(apps_t *apps, bool use_sd) {
+    log_info("==> Apps Initializing...");
     apps->app_count = 0;
 
     apps->parse_log_f = fopen(APPS_PARSE_LOG, "w");
@@ -57,11 +61,37 @@ int apps_init(apps_t *apps, bool use_sd) {
 
     prts_timer_create(&apps->bg_app_check_timer, 0, APPS_BG_APP_CHECK_PERIOD, -1,
                         apps_bg_app_check_timer_cb, apps);
+
+    atomic_store(&apps->ipc_running, 1);
+    pthread_create(&apps->ipc_thread, NULL, apps_ipc_server_thread, apps);
+
+    log_info("==> Apps Initalized! %d apps loaded", apps->app_count);
     return 0;
 }
 
+static int kill_app_background(int pgid);
+
 int apps_destroy(apps_t *apps) {
-    apps->app_count = 0;
+    prts_timer_cancel(apps->bg_app_check_timer);
+
+    //kill all background apps
+    for (int i = 0; i < apps->app_count; i++) {
+        if (apps->apps[i].type == APP_TYPE_BACKGROUND && apps->apps[i].pid != -1) {
+            kill_app_background(apps->apps[i].pid);
+        }
+    }
+    pid_t pid;
+    int status;
+    usleep(1 * 1000 * 1000);
+
+    while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
+        if (WIFEXITED(status)) {
+            log_info("destory:child process %d exited with status %d", pid, WEXITSTATUS(status));
+        }
+    }
+
+    atomic_store(&apps->ipc_running, 0);
+    pthread_join(apps->ipc_thread, NULL);
     fclose(apps->parse_log_f);
     return 0;
 }

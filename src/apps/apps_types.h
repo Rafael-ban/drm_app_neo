@@ -2,8 +2,9 @@
 #include "utils/uuid.h"
 #include "utils/timer.h"
 #include "config.h"
+#include <stdatomic.h>
 #include <stdio.h>
-
+#include <pthread.h>
 
 typedef enum {
     APP_SOURCE_NAND = 0,
@@ -56,4 +57,7 @@ typedef struct {
     prts_timer_handle_t bg_app_check_timer;
 
     FILE* parse_log_f;
+
+    pthread_t ipc_thread;
+    atomic_int ipc_running;
 } apps_t;

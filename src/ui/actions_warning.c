@@ -14,9 +14,9 @@
 #include <utils/timer.h>
 
 static spsc_bq_t g_warning_queue;
-static char g_warning_title[64] = {0};
-static char g_warning_desc[64] = {0};
-static char g_warning_icon[16] = {0};
+static char g_warning_title[UI_WARNING_MAX_TITLE_LENGTH] = {0};
+static char g_warning_desc[UI_WARNING_MAX_DESC_LENGTH] = {0};
+static char g_warning_icon[UI_WARNING_MAX_ICON_LENGTH] = {0};
 
 static lv_timer_t * g_warning_timer = NULL;
 static uint32_t g_last_trigger_tick = 0;
@@ -180,9 +180,12 @@ static void ui_warning_timer_cb(lv_timer_t * timer){
         return;
     }
     if(spsc_bq_try_pop(&g_warning_queue, (void **)&info) == 0){
-        strcpy(g_warning_title, info->title);
-        strcpy(g_warning_desc, info->desc);
-        strcpy(g_warning_icon, info->icon);
+        strncpy(g_warning_title, info->title, UI_WARNING_MAX_TITLE_LENGTH);
+        strncpy(g_warning_desc, info->desc, UI_WARNING_MAX_DESC_LENGTH);
+        strncpy(g_warning_icon, info->icon, UI_WARNING_MAX_ICON_LENGTH);
+        g_warning_title[UI_WARNING_MAX_TITLE_LENGTH - 1] = '\0';
+        g_warning_desc[UI_WARNING_MAX_DESC_LENGTH - 1] = '\0';
+        g_warning_icon[UI_WARNING_MAX_ICON_LENGTH - 1] = '\0';
         lv_obj_set_style_bg_color(
             objects.warning, 
             lv_color_hex(info->color),

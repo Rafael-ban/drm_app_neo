@@ -214,6 +214,7 @@ int main(int argc, char *argv[]){
     /* cleanup */
     log_info("==> Shutting down EPass DRM APP!");
     prts_timer_destroy(&g_prts_timer);
+    apps_destroy(&g_apps);
     lvgl_drm_warp_destroy(&g_lvgl_drm_warp);
     overlay_destroy(&g_overlay);
     mediaplayer_stop(&g_mediaplayer);

@@ -165,5 +165,7 @@ void lvgl_drm_warp_destroy(lvgl_drm_warp_t *lvgl_drm_warp){
     ui_warning_destroy();
     ui_battery_destroy();
     ui_confirm_destroy();
+    log_info("pre app destroy");
     ui_apps_destroy();
+    log_info("post app destroy");
 }

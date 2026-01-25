@@ -62,7 +62,7 @@
 #define APPS_DIR "/app/"
 #define APPS_DIR_SD SD_MOUNT_POINT "/app/"
 #define APPS_BG_APP_CHECK_PERIOD (1000 * 1000)
-
+#define APPS_BG_KILL_TIMEOUT_US (1000 * 1000)
 
 // ========== Screen Configuration ==========
 #define USE_360_640_SCREEN
@@ -80,14 +80,19 @@
     #define SCREEN_WIDTH 360
     #define SCREEN_HEIGHT 640
 
+    #define UI_OPLIST_VISIBLE_SLOTS 8
+    #define UI_OPLIST_ITEM_HEIGHT 80
+
+    #define UI_APP_VISIBLE_SLOTS 12
+    #define UI_APP_ITEM_HEIGHT 80
+
+
     // 干员列表和亮度设置的Y坐标
     #define UI_OPLIST_Y 250
     #define UI_SPINNER_INTRO_Y 580
     #define UI_MAINMENU_Y 190
     #define UI_WARNING_Y 565
     #define UI_CONFIRM_Y (UI_HEIGHT - 125)
-
-
 
     
     // UI-信息Overlay叠层 左上角的矩形偏移量

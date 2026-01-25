@@ -6,6 +6,7 @@
 #include <stdint.h>
 #include <signal.h>
 #include <sys/time.h>
+#include <sys/wait.h>
 
 #include "config.h"
 #include "driver/drm_warpper.h"
@@ -198,8 +199,15 @@ int main(int argc, char *argv[]){
     ui_warning_custom("我喜欢你", "你喜欢我我喜欢你", UI_ICON_HEART, UI_COLOR_OK);
 
     // ============ 主循环 ===============
-    // does nothing, stuck here until signal is received
     while(g_running){
+        int status; 
+        pid_t pid;
+        // 处理子进程（后台app）退出
+        while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
+            if (WIFEXITED(status)) {
+                log_info("child process %d exited with status %d", pid, WEXITSTATUS(status));
+            }
+        }
         usleep(1 * 1000 * 1000);
     }
 

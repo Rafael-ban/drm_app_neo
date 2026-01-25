@@ -28,7 +28,7 @@ static void refocus_to_operator(int op_idx);
 
 // 根据干员索引重新设置焦点
 static void refocus_to_operator(int op_idx) {
-    for (int i = 0; i < OPLIST_VISIBLE_SLOTS; i++) {
+    for (int i = 0; i < UI_OPLIST_VISIBLE_SLOTS; i++) {
         if (g_ui_oplist.slots[i].operator_index == op_idx) {
             lv_group_focus_obj(g_ui_oplist.slots[i].opbtn);
             return;
@@ -55,7 +55,7 @@ static void create_slot_ui(int slot_idx) {
     // 创建外层容器
     lv_obj_t *obj = lv_obj_create(objects.oplst_container);
     lv_obj_set_pos(obj, 0, 0);
-    lv_obj_set_size(obj, LV_PCT(97), OPLIST_ITEM_HEIGHT);
+    lv_obj_set_size(obj, LV_PCT(97), UI_OPLIST_ITEM_HEIGHT);
     lv_obj_set_style_pad_left(obj, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_top(obj, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_right(obj, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -113,7 +113,7 @@ static void update_slot_content(int slot_idx, int operator_idx) {
 static void update_visible_range(int new_start) {
     // 边界检查
     if (new_start < 0) new_start = 0;
-    int max_start = g_ui_oplist.total_count - OPLIST_VISIBLE_SLOTS;
+    int max_start = g_ui_oplist.total_count - UI_OPLIST_VISIBLE_SLOTS;
     if (max_start < 0) max_start = 0;
     if (new_start > max_start) new_start = max_start;
 
@@ -123,7 +123,7 @@ static void update_visible_range(int new_start) {
     g_ui_oplist.visible_start = new_start;
 
     // 更新所有槽位
-    for (int i = 0; i < OPLIST_VISIBLE_SLOTS; i++) {
+    for (int i = 0; i < UI_OPLIST_VISIBLE_SLOTS; i++) {
         int op_idx = new_start + i;
         if (op_idx < g_ui_oplist.total_count) {
             update_slot_content(i, op_idx);
@@ -146,7 +146,7 @@ static void oplist_focus_cb(lv_event_t *e) {
 
     // 找到当前焦点的slot索引
     int slot_idx = -1;
-    for (int i = 0; i < OPLIST_VISIBLE_SLOTS; i++) {
+    for (int i = 0; i < UI_OPLIST_VISIBLE_SLOTS; i++) {
         if (g_ui_oplist.slots[i].opbtn == focused) {
             slot_idx = i;
             break;
@@ -166,8 +166,8 @@ static void oplist_focus_cb(lv_event_t *e) {
         g_scroll_in_progress = false;
     }
     // 边界检测：焦点移到底部附近，向下滚动
-    else if (slot_idx >= OPLIST_VISIBLE_SLOTS - 2 &&
-             g_ui_oplist.visible_start + OPLIST_VISIBLE_SLOTS < g_ui_oplist.total_count) {
+    else if (slot_idx >= UI_OPLIST_VISIBLE_SLOTS - 2 &&
+             g_ui_oplist.visible_start + UI_OPLIST_VISIBLE_SLOTS < g_ui_oplist.total_count) {
         g_scroll_in_progress = true;
         int new_start = g_ui_oplist.visible_start + 1;
         update_visible_range(new_start);
@@ -187,13 +187,7 @@ void ui_oplist_init(prts_t* prts){
     // 清空干员列表容器
     lv_obj_clean(objects.oplst_container);
 
-    // 创建固定数量的槽位
-    int slots_to_create = OPLIST_VISIBLE_SLOTS;
-    if (slots_to_create > prts->operator_count) {
-        slots_to_create = prts->operator_count;
-    }
-
-    for (int i = 0; i < OPLIST_VISIBLE_SLOTS; i++) {
+    for (int i = 0; i < UI_OPLIST_VISIBLE_SLOTS; i++) {
         create_slot_ui(i);
         if (i < prts->operator_count) {
             update_slot_content(i, i);
@@ -208,7 +202,7 @@ void ui_oplist_init(prts_t* prts){
     }
 
     log_info("prts->ui sync complete! Created %d slots for %d operators",
-             slots_to_create, prts->operator_count);
+        UI_OPLIST_VISIBLE_SLOTS, prts->operator_count);
 }
 
 void add_oplist_btn_to_group(){
@@ -219,7 +213,7 @@ void add_oplist_btn_to_group(){
     lv_group_set_wrap(groups.op, false);
 
     // 只添加当前可见的按钮到组
-    for (int i = 0; i < OPLIST_VISIBLE_SLOTS; i++) {
+    for (int i = 0; i < UI_OPLIST_VISIBLE_SLOTS; i++) {
         if (g_ui_oplist.slots[i].operator_index >= 0) {
             lv_group_add_obj(groups.op, g_ui_oplist.slots[i].opbtn);
         }
@@ -232,13 +226,13 @@ void ui_oplist_focus_current_operator(){
 
     // 确保当前干员在可见范围内
     if (current_op < g_ui_oplist.visible_start ||
-        current_op >= g_ui_oplist.visible_start + OPLIST_VISIBLE_SLOTS) {
+        current_op >= g_ui_oplist.visible_start + UI_OPLIST_VISIBLE_SLOTS) {
         // 滚动到当前干员
         update_visible_range(current_op);
     }
 
     // 找到对应的槽位并聚焦
-    for (int i = 0; i < OPLIST_VISIBLE_SLOTS; i++) {
+    for (int i = 0; i < UI_OPLIST_VISIBLE_SLOTS; i++) {
         if (g_ui_oplist.slots[i].operator_index == current_op) {
             lv_group_focus_obj(g_ui_oplist.slots[i].opbtn);
             return;

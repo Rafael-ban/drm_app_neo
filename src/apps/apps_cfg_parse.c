@@ -73,11 +73,6 @@ int apps_cfg_try_load(apps_t *apps,app_entry_t* app,char * app_dir,app_source_t 
         return -1;
     }
 
-    // 解析描述
-    const char* desc = json_get_string(json, "description");
-    safe_strcpy(app->description, sizeof(app->description),
-                desc ? desc : "");
-
     // 解析可执行文件（必需）
     cJSON* exec_obj = cJSON_GetObjectItem(json, "executable");
     const char* exec_file = NULL;
@@ -94,6 +89,78 @@ int apps_cfg_try_load(apps_t *apps,app_entry_t* app,char * app_dir,app_source_t 
         cJSON_Delete(json);
         return -1;
     }
+    // 解析type
+    const char* type = json_get_string(json, "type");
+    if (type && type[0] != '\0') {
+        if (strcmp(type, "bg") == 0) {
+            app->type = APP_TYPE_BACKGROUND;
+        }
+        else if (strcmp(type, "fg") == 0) {
+            app->type = APP_TYPE_FOREGROUND;
+        }
+        else if (strcmp(type, "fg_ext") == 0) {
+            app->type = APP_TYPE_FOREGROUND_EXTENSION_ONLY;
+        }
+        else{
+            parse_log_file(apps->parse_log_f, app_dir, "type 不合法", PARSE_LOG_ERROR);
+            cJSON_Delete(json);
+            return -1;
+        }
+    }
+    else{
+        parse_log_file(apps->parse_log_f, app_dir, "缺少字段 type", PARSE_LOG_ERROR);
+        cJSON_Delete(json);
+        return -1;
+    }
+
+    // 解析screen
+    bool screen_match_this_build = false;
+
+    cJSON* screens_obj = cJSON_GetObjectItem(json, "screens");
+    if (screens_obj && cJSON_IsArray(screens_obj)) {
+        for(int i = 0; i < cJSON_GetArraySize(screens_obj); i++){
+            cJSON* screen_obj = cJSON_GetArrayItem(screens_obj, i);
+            if (screen_obj && cJSON_IsString(screen_obj)) {
+#ifdef USE_360_640_SCREEN
+                if (strcmp(screen_obj->valuestring, "360x640") == 0) {
+                    screen_match_this_build = true;
+                }
+#endif
+#ifdef USE_480_854_SCREEN
+                if (strcmp(screen_obj->valuestring, "480x854") == 0) {
+                    screen_match_this_build = true;
+                }
+#endif
+#ifdef USE_720_1280_SCREEN
+                if (strcmp(screen_obj->valuestring, "720x1280") == 0) {
+                    screen_match_this_build = true;
+                }
+#endif
+            }
+            else{
+                parse_log_file(apps->parse_log_f, app_dir, "screens 数组元素不合法", PARSE_LOG_ERROR);
+                cJSON_Delete(json);
+                return -1;
+            }
+        }
+    }
+    else{
+        parse_log_file(apps->parse_log_f, app_dir, "缺少字段 screens", PARSE_LOG_ERROR);
+        cJSON_Delete(json);
+        return -1;
+    }
+    if (!screen_match_this_build) {
+        parse_log_file(apps->parse_log_f, app_dir, "此应用screen不兼容当前固件配置", PARSE_LOG_ERROR);
+        cJSON_Delete(json);
+        return -1;
+    }
+
+
+    // 解析描述
+    const char* desc = json_get_string(json, "description");
+    safe_strcpy(app->description, sizeof(app->description),
+                desc ? desc : "(无描述)");
+    
 
     // 构建可执行文件完整路径
     join_path(app->executable_path, sizeof(app->executable_path), app_dir, exec_file);

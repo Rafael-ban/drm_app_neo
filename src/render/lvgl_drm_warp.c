@@ -2,6 +2,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <time.h>
+#include <ui/actions_apps.h>
 #include <ui/actions_displayimg.h>
 #include <unistd.h>
 #include <string.h>
@@ -143,6 +144,7 @@ void lvgl_drm_warp_init(lvgl_drm_warp_t *lvgl_drm_warp,drm_warpper_t *drm_warppe
     ui_battery_init();
     ui_displayimg_init();
     ui_confirm_init();
+    ui_apps_init(apps);
 
     atomic_store(&lvgl_drm_warp->running, 1);
     if (pthread_create(&lvgl_drm_warp->lvgl_thread, NULL, lvgl_drm_warp_thread_entry, lvgl_drm_warp) != 0) {
@@ -163,4 +165,5 @@ void lvgl_drm_warp_destroy(lvgl_drm_warp_t *lvgl_drm_warp){
     ui_warning_destroy();
     ui_battery_destroy();
     ui_confirm_destroy();
+    ui_apps_destroy();
 }

@@ -11,6 +11,7 @@
 #include "ui/actions_settings.h"
 #include "ui/filemanager.h"
 #include "ui/actions_oplist.h"
+#include "ui/actions_apps.h"
 #include "ui/scr_transition.h"
 #include <ui/actions_displayimg.h>
 #include "ui/actions_confirm.h"
@@ -154,6 +155,9 @@ void action_screen_loaded_cb(lv_event_t * e){
     else if(g_cur_scr == curr_screen_t_SCREEN_OPLIST){
         add_oplist_btn_to_group();
         ui_oplist_focus_current_operator();
+    }
+    else if(g_cur_scr == curr_screen_t_SCREEN_APPLIST){
+        add_applist_btn_to_group();
     }
     return;
 };

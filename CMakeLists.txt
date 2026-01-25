@@ -108,6 +108,7 @@ set(EPASS_SOURCES
   src/ui/actions_displayimg.c
   src/ui/actions_sysinfo.c
   src/ui/actions_oplist.c
+  src/ui/actions_apps.c
   src/ui/actions_confirm.c
 
   src/overlay/overlay.c
